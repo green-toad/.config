@@ -1,0 +1,21 @@
+{
+    "layer": "overlay",
+    "exclusive": false,
+    "position": "top",
+    "height": 32,
+    "modules-left": ["hyprland/workspaces"],
+    "modules-center": ["clock"],
+    "modules-right": ["tray"],
+
+    "hyprland/workspaces": {
+        "disable-scroll": true,
+        "all-outputs": true
+    },
+    "clock": {
+        "format": "{:%H:%M}",
+        "tooltip-format": "{:%A, %d %B %Y}"
+    },
+   "tray": {
+        "spacing": 10
+    }
+}

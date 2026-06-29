@@ -1,0 +1,15 @@
+@define-color bg-panel %%background.hex%%;
+@define-color color0 %%color0.hex%%;
+@define-color color1 %%color1.hex%%;
+@define-color color2 %%color2.hex%%;
+@define-color color3 %%color3.hex%%;
+@define-color color4 %%color4.hex%%;
+@define-color color5 %%color5.hex%%;
+@define-color color6 %%color6.hex%%;
+@define-color color8 %%color8.hex%%;
+@define-color color9 %%color9.hex%%;
+@define-color color10 %%color10.hex%%;
+@define-color accent %%color13.hex%%;
+@define-color text-main %%foreground.hex%%;
+@define-color critical %%color1.hex%%;
+@define-color good %%color10.hex%%;

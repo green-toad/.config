@@ -1,0 +1,103 @@
+/* ~/.config/wofi/style.css
+ * Строгий, современный стиль.
+ * Цвета можно брать из pywal: замените блок переменных на
+ * @import url("/путь/к/colors-wal.css");
+ */
+
+@import url("../../.cache/hellwal/wofi-colors.css");
+
+/* дополнительные переменные для строгости */
+@define-color surface alpha(@color0, 0.92);
+@define-color border alpha(@text-main, 0.25);
+@define-color hover-bg alpha(@color5, 0.30);
+@define-color select-bg @accent;
+@define-color select-text @bg-panel;
+
+/* ---------- база ---------- */
+* {
+    font-family: "JetBrainsMono Nerd Font", "JetBrainsMono", monospace;
+    font-size: 13px;
+    font-weight: 500;
+    min-height: 0;
+    border: none;
+    border-radius: 0;
+}
+
+/* ---------- окно ---------- */
+#window {
+    background: @surface;
+    color: @text-main;
+    border: 1px solid @border;
+    border-radius: 14px;           /* строже, меньше скругления */
+    margin: 4px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+/* ---------- строка поиска ---------- */
+#input {
+    background: alpha(@color0, 0.85);
+    border: 1px solid @border;
+    border-radius: 10px;
+    padding: 0 16px;
+    margin: 10px 12px 6px 12px;
+    color: @text-main;
+    box-shadow: none;
+    transition: border-color 0.2s ease;
+}
+#input:focus {
+    border-color: @accent;
+    box-shadow: 0 0 0 2px alpha(@accent, 0.25);
+}
+
+/* ---------- область списка ---------- */
+#scroll {
+    margin: 4px 0;
+}
+#inner-box {
+    margin: 0 8px;
+}
+
+/* ---------- строка приложения ---------- */
+#entry {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 5px 12px;
+    margin: 2px 0;
+    color: @text-main;
+    box-shadow: none;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+/* наведение */
+#entry:hover {
+    background: @hover-bg;
+    border-color: alpha(@accent, 0.4);
+}
+
+/* активный (выбранный) */
+#entry:selected {
+    background: @select-bg;
+    color: @select-text;
+    border-color: @accent;
+    box-shadow: 0 0 0 1px @accent;
+    font-weight: 600;
+}
+
+/* ---------- иконки (стилизованные) ---------- */
+#img {
+    margin-right: 10px;
+    /* Превращаем любые иконки в монохромные и тонируем в акцентный цвет */
+    filter: grayscale(1) brightness(0.9) sepia(0.4) hue-rotate(200deg) saturate(2.5);
+    transition: filter 0.2s;
+}
+#entry:selected #img {
+    /* Возвращаем цвет для выбранного элемента – иконка становится ярче */
+    filter: grayscale(0) brightness(1.1) saturate(1.5);
+}
+
+/* ---------- текст ---------- */
+#text {
+    color: inherit;
+    background: transparent;
+}
