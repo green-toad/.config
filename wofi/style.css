@@ -1,19 +1,18 @@
-/* ~/.config/wofi/style.css
- * Строгий, современный стиль.
- * Цвета можно брать из pywal: замените блок переменных на
- * @import url("/путь/к/colors-wal.css");
- */
+@import url("/home/nyashka/.cache/hellwal/wofi-colors.css");
 
-@import url("../../.cache/hellwal/wofi-colors.css");
+/* ---------- базовые альфа-переменные (удобство) ---------- */
+@define-color surface alpha(@color0, 0.92);          /* фон окна */
+@define-color border alpha(@text-main, 0.25);        /* рамка */
+@define-color hover-bg alpha(@color5, 0.30);         /* фон при наведении */
+@define-color selected-bg @accent;                   /* фон выбранного */
+@define-color selected-text @bg-panel;               /* текст выбранного */
+@define-color input-bg alpha(@color2, 0.85);         /* фон строки поиска (чуть светлее) */
+@define-color input-border alpha(@color4, 0.6);      /* цвет рамки поиска */
+@define-color scrollbar-bg alpha(@color3, 0.3);      /* фон полосы прокрутки */
+@define-color scrollbar-thumb @color6;               /* бегунок прокрутки */
+@define-color separator alpha(@color8, 0.4);         /* разделители между элементами */
 
-/* дополнительные переменные для строгости */
-@define-color surface alpha(@color0, 0.92);
-@define-color border alpha(@text-main, 0.25);
-@define-color hover-bg alpha(@color5, 0.30);
-@define-color select-bg @accent;
-@define-color select-text @bg-panel;
-
-/* ---------- база ---------- */
+/* ---------- общие настройки ---------- */
 * {
     font-family: "JetBrainsMono Nerd Font", "JetBrainsMono", monospace;
     font-size: 13px;
@@ -26,78 +25,113 @@
 /* ---------- окно ---------- */
 #window {
     background: @surface;
-    color: @text-main;
-    border: 1px solid @border;
-    border-radius: 14px;           /* строже, меньше скругления */
+    color: @bg-panel;
+    border: 1px solid @border;               /* теперь рамка толще и заметнее */
+    border-radius: 11px;
     margin: 4px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
 }
 
 /* ---------- строка поиска ---------- */
 #input {
-    background: alpha(@color0, 0.85);
-    border: 1px solid @border;
+    background: @input-bg;
+    border: 1px solid @input-border;
     border-radius: 10px;
     padding: 0 16px;
     margin: 10px 12px 6px 12px;
     color: @text-main;
+    caret-color: @accent;                    /* цвет курсора – акцентный */
     box-shadow: none;
-    transition: border-color 0.2s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 #input:focus {
     border-color: @accent;
-    box-shadow: 0 0 0 2px alpha(@accent, 0.25);
+    box-shadow: 0 0 0 3px alpha(@accent, 0.30);
 }
 
 /* ---------- область списка ---------- */
 #scroll {
     margin: 4px 0;
+    /* стилизуем полосу прокрутки (работает в GTK) */
+    scrollbar-width: thin;
+    scrollbar-color: @scrollbar-thumb @scrollbar-bg;
 }
+#scroll::-webkit-scrollbar {
+    width: 6px;
+    background: @scrollbar-bg;
+}
+#scroll::-webkit-scrollbar-thumb {
+    background: @scrollbar-thumb;
+    border-radius: 4px;
+}
+
 #inner-box {
     margin: 0 8px;
 }
 
-/* ---------- строка приложения ---------- */
+/* ---------- строки приложений ---------- */
 #entry {
     background: transparent;
-    border: 1px solid transparent;
+    border-bottom: 1px solid @separator;     /* разделитель между строками */
     border-radius: 8px;
-    padding: 5px 12px;
-    margin: 2px 0;
-    color: @text-main;
+    padding: 6px 12px;
+    margin: 1px 0;
+    color: @text-main;                       /* основной текст – светлый */
     box-shadow: none;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+/* чётные/нечётные строки – лёгкое чередование для удобства чтения */
+#entry:nth-child(odd) {
+    background: alpha(@color8, 0.15);        /* очень слабый оттенок */
+}
+#entry:nth-child(even) {
+    background: alpha(@color9, 0.10);
 }
 
 /* наведение */
 #entry:hover {
     background: @hover-bg;
-    border-color: alpha(@accent, 0.4);
+    border-color: alpha(@accent, 0.5);
+    color: @color6;                          /* меняем цвет текста при наведении */
 }
 
-/* активный (выбранный) */
+/* выбранный (активный) элемент */
 #entry:selected {
-    background: @select-bg;
-    color: @select-text;
+    background: @selected-bg;
+    color: @selected-text;
     border-color: @accent;
+    border-bottom-color: @accent;           /* оставляем разделитель, но акцентный */
     box-shadow: 0 0 0 1px @accent;
     font-weight: 600;
 }
 
-/* ---------- иконки (стилизованные) ---------- */
+/* ---------- иконки ---------- */
 #img {
     margin-right: 10px;
-    /* Превращаем любые иконки в монохромные и тонируем в акцентный цвет */
-    filter: grayscale(1) brightness(0.9) sepia(0.4) hue-rotate(200deg) saturate(2.5);
+    /* тонируем иконки в цвет @color4 (тёплый) с лёгкой насыщенностью */
+    filter: grayscale(1) brightness(0.9) sepia(0.5) hue-rotate(180deg) saturate(2.0);
     transition: filter 0.2s;
 }
+/* при наведении – чуть ярче */
+#entry:hover #img {
+    filter: grayscale(0.2) brightness(1.1) saturate(1.8);
+}
+/* в выбранном состоянии – полностью цветные, яркие */
 #entry:selected #img {
-    /* Возвращаем цвет для выбранного элемента – иконка становится ярче */
-    filter: grayscale(0) brightness(1.1) saturate(1.5);
+    filter: grayscale(0) brightness(1.2) saturate(2.0);
 }
 
-/* ---------- текст ---------- */
+/* ---------- текст внутри строк ---------- */
 #text {
     color: inherit;
     background: transparent;
+}
+
+/* ---------- дополнительно: метка количества результатов (если есть) ---------- */
+#label {
+    color: @color4;
+    margin: 0 12px 6px 12px;
+    font-size: 11px;
+    opacity: 0.8;
 }

@@ -17,9 +17,6 @@
 -- Create your files separately and then require them like this:
 -- require("myColors")
 
-local home = os.getenv("HOME")
--- require(loadfile("/home/nyashka/.cache/hellwal/hellwm.lua"))
--- require(home .. "/.cache/hellwal/hellwm.lua")
 
 ------------------
 ---- MONITORS ----
@@ -106,8 +103,10 @@ hl.config({
         border_size = 2,
 
         col = {
-            active_border   = { colors = {"rgba(33ccffee)", "rgba(00ff99ee)"}, angle = 45 },
-            inactive_border = "rgba(595959aa)",
+--            active_border   = { colors = {"rgba(33ccffee)", "rgba(00ff99ee)"}, angle = 45 },
+--            inactive_border = "rgba(595959aa)",
+            active_border   = "rgba(ffffff00)",
+	    inactive_border = "rgba(ffffff00)",
         },
 
         -- Set to true to enable resizing windows by clicking and dragging on borders and gaps
