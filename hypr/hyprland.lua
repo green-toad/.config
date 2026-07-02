@@ -23,15 +23,9 @@
 ------------------
 
 -- See https://wiki.hypr.land/Configuring/Basics/Monitors/
-hl.monitor({
-    output   = "",
-    mode     = "preferred",
-    position = "auto",
-    scale    = "auto",
-})
 
 hl.monitor({ output = "HDMI-A-1", mode = "1920x1080", position = "0x0", scale = 1 })
-hl.monitor({ output = "eDP-1", mode = "1920x1080", position = "1920x0", scale = 1 })
+hl.monitor({ output = "eDP-1", mode = "1920x1080", position = "1920x0", scale = 1.2 })
 ---------------------
 ---- MY PROGRAMS ----
 ---------------------
@@ -196,6 +190,7 @@ hl.animation({ leaf = "zoomFactor",    enabled = true,  speed = 7,    bezier = "
 hl.config({
     dwindle = {
         preserve_split = true, -- You probably want this
+	smart_split = false,
     },
 })
 
@@ -292,7 +287,7 @@ for i = 1, 10 do
     hl.bind(mainMod .. " + SHIFT + " .. key,     hl.dsp.window.move({ workspace = i }))
 end
 
--- Example special workspace (scratchpad)
+
 hl.bind(mainMod .. " + S",         hl.dsp.exec_cmd("hyprshot -m output -m active -f nyashniScreen  --clipboard-only"))
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("hyprshot -m output -m region -f nyashniScreen --clipboard-only"))
 
