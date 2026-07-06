@@ -17,6 +17,9 @@ EOF
 
 hellwal -i $wp
 
+# yes | rm $HOME/.config/quickshell/bigClock/Colors.qml
+cp $HOME/.cache/hellwal/qlm-colors.qml $HOME/.config/quickshell/bigClock/Colors.qml
+
 killall hyprpaper
 hyprpaper &
 
