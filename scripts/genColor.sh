@@ -1,6 +1,6 @@
-wp=$(find /home/nyashka/.config/wallpapers -maxdepth 1 -type f -print | shuf -n 1)
+wp=$(find $HOME/.config/wallpapers -maxdepth 1 -type f -print | shuf -n 1)
 
-cat > /home/nyashka/.config/hypr/hyprpaper.conf <<EOF
+cat > $HOME/.config/hypr/hyprpaper.conf <<EOF
 wallpaper {
         monitor = eDP-1
         path = $wp
@@ -17,7 +17,7 @@ EOF
 
 hellwal -i $wp
 
-# yes | rm $HOME/.config/quickshell/bigClock/Colors.qml
+
 cp $HOME/.cache/hellwal/qlm-colors.qml $HOME/.config/quickshell/bigClock/Colors.qml
 
 killall hyprpaper
