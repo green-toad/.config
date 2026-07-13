@@ -1,7 +1,7 @@
 *
 
 !hypr/
-!hypr/**
+!hypr/hyprland.lua
 !waybar/
 !waybar/**
 !fastfetch/
@@ -18,4 +18,5 @@
 !wallpapers/**
 !wofi/
 !wofi/**
+!quickshell/
 !quickshell/**

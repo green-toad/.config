@@ -3,8 +3,8 @@
     "exclusive": false,
     "position": "top",
     "height": 32,
-    "modules-left": ["hyprland/workspaces"],
-    "modules-center": ["clock"],
+    "modules-left": [],
+    "modules-center": ["hyprland/workspaces"],
     "modules-right": ["tray"],
 
     "hyprland/workspaces": {
