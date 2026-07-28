@@ -24,8 +24,8 @@
 
 -- See https://wiki.hypr.land/Configuring/Basics/Monitors/
 
-hl.monitor({ output = "HDMI-A-1", mode = "1920x1080", position = "0x0", scale = 1 })
-hl.monitor({ output = "eDP-1", mode = "1920x1080", position = "1920x0", scale = 1.2 })
+-- hl.monitor({ output = "HDMI-A-1", mode = "1920x1080", position = "0x0", scale = 1 })
+-- hl.monitor({ output = "eDP-1", mode = "1920x1080", position = "1920x0", scale = 1.2 })
 ---------------------
 ---- MY PROGRAMS ----
 ---------------------
@@ -209,6 +209,8 @@ hl.config({
     },
 })
 
+
+
 ----------------
 ----  MISC  ----
 ----------------
@@ -267,6 +269,7 @@ local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd(terminal))
 local closeWindowBind = hl.bind(mainMod .. " + W", hl.dsp.window.close())
 -- closeWindowBind:set_enabled(false)
+
 
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
