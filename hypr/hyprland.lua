@@ -49,7 +49,7 @@ hl.on("hyprland.start", function ()
 --   hl.exec_cmd("hyprpaper &")
 --   hl.exec_cmd("waybar &")
    hl.exec_cmd("~/.config/scripts/genColor.sh &")
-   hl.exec_cmd("xray -c /home/nyashka/vpnConfig.json &")
+   hl.exec_cmd("xray -c ~/vpnConfig.json &")
    hl.exec_cmd("qs -c bigClock &")
 --   hl.exec_cmd("nm-applet")
 --   hl.exec_cmd("waybar & hyprpaper & firefox")
@@ -219,6 +219,8 @@ hl.config({
         disable_hyprland_logo   = true, -- If true disables the random hyprland logo / anime girl background. :(
     },
 })
+
+
 
 
 ---------------
