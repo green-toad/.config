@@ -3,12 +3,10 @@ import Quickshell.Io
 import QtQuick
 
 import "ClockWidget"
-import "CavaDrawer"
 
 Scope
 {
     Time { id: timeSource }
-    Cava { id: cava}
     Variants
     {
         model: Quickshell.screens;
