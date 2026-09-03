@@ -2,14 +2,14 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell.Hyprland
 
-// Circle-based workspace indicator, driven by Hyprland IPC.
 Row {
     id: root
+    anchors.centerIn: parent
     spacing: 10
 
     readonly property var hyprWorkspaces: Hyprland.workspaces
     readonly property int activeId: Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id : 1
-    property int visibleCount: 5
+    property int visibleCount: 10
 
     Repeater {
         model: root.visibleCount
@@ -36,7 +36,7 @@ Row {
 
             MouseArea {
                 anchors.fill: parent
-                anchors.margins: -4
+                anchors.margins: 0
                 cursorShape: Qt.PointingHandCursor
                 onClicked: Hyprland.dispatch("workspace " + dot.wsId)
             }

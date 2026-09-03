@@ -6,7 +6,7 @@ import Quickshell.Io
 Rectangle {
     id: root
 
-    property string scriptPath: Quickshell.env("HOME") + "/.config/arch-panel/scripts/update.sh"
+    property string scriptPath: Quickshell.env("HOME") + "/.config/scripts/genColor.sh"
     property bool running: false
 
     implicitWidth: 140

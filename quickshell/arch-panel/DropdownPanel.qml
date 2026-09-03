@@ -11,7 +11,6 @@ Item {
         anchors.fill: parent
         spacing: 20
 
-        // ---- Column 1: system monitor ---------------------------------
         ColumnLayout {
             Layout.preferredWidth: 160
             Layout.fillHeight: true

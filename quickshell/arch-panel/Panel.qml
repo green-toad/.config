@@ -29,12 +29,10 @@ PanelWindow {
     WlrLayershell.exclusiveZone: barHeight
     WlrLayershell.namespace: "arch-panel"
 
-    // exclusive zone only for the bar itself, dropdown overlays content
     exclusionMode: ExclusionMode.Normal
 
     property bool expanded: false
 
-    // hide dropdown shortly after mouse leaves either the logo or the popup
     Timer {
         id: closeTimer
         interval: 250
@@ -49,9 +47,6 @@ PanelWindow {
         closeTimer.restart()
     }
 
-    // ====================================================================
-    // Root visual: one continuous "capsule" that grows downward
-    // ====================================================================
     Rectangle {
         id: shellSurface
         anchors.fill: parent
@@ -74,7 +69,6 @@ PanelWindow {
             height: bar.barHeight
             spacing: 0
 
-            // ---- LEFT: distro logo (hover trigger) ------------------
             Item {
                 id: logoArea
                 Layout.preferredWidth: 46
@@ -82,7 +76,7 @@ PanelWindow {
 
                 Text {
                     anchors.centerIn: parent
-                    text: "\uF303"           // Nerd Font Arch logo glyph
+                    text: "\uF303"
                     font.family: "Symbols Nerd Font"
                     font.pixelSize: 16
                     color: "#89b4fa"
@@ -98,6 +92,7 @@ PanelWindow {
 
             // ---- CENTER: workspaces -----------------------------------
             Item {
+                anchors.centerIn: parent
                 Layout.fillWidth: true
                 Layout.fillHeight: true
 
