@@ -1,0 +1,4 @@
+singleton SystemUsage 1.0 SystemUsage.qml
+singleton AudioService 1.0 AudioService.qml
+singleton WifiService 1.0 WifiService.qml
+singleton BatteryService 1.0 BatteryService.qml

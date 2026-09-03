@@ -89,8 +89,8 @@ Row {
 
                             customMenu.menuModel = modelData.menu ? modelData.menu : []
                             var globalPos = trayDelegate.mapToGlobal(mouse.x, mouse.y)
-                            customMenu.x = globalPos.x
-                            customMenu.y = globalPos.y
+                            // customMenu.x = globalPos.x
+                            // customMenu.y = globalPos.y
                             customMenu.visible = true
                         }
                     }
