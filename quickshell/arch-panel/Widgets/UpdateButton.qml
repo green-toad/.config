@@ -21,7 +21,7 @@ Rectangle {
         spacing: 6
 
         Text {
-            text: root.running ? "\uF110" : "\uF021"   // spinner / refresh glyph
+            text: root.running ? "\uF110" : "\uF021"
             font.family: "Symbols Nerd Font"
             font.pixelSize: 13
             color: "#1e1e2e"

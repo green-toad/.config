@@ -4,7 +4,6 @@ import Quickshell.Hyprland
 
 Row {
     id: root
-    anchors.centerIn: parent
     spacing: 10
 
     readonly property var hyprWorkspaces: Hyprland.workspaces

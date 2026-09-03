@@ -20,8 +20,7 @@ hellwal -i $wp
 
 cp $HOME/.cache/hellwal/qlm-colors.qml $HOME/.config/quickshell/bigClock/Colors.qml
 
+cp $HOME/.cache/hellwal/qlm-colors.qml $HOME/.config/quickshell/arch-panel/Colors.qml
+
 killall hyprpaper
 hyprpaper &
-
-killall waybar
-waybar &
