@@ -36,7 +36,7 @@ PanelWindow {
 
     Timer {
         id: closeTimer
-        interval: 250
+        interval: 600
         onTriggered: bar.expanded = false
     }
 
