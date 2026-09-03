@@ -1,10 +1,13 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Hyprland
+import "../"
 
 Row {
     id: root
     spacing: 10
+
+    Colors { id: colors }
 
     readonly property var hyprWorkspaces: Hyprland.workspaces
     readonly property int activeId: Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id : 1
@@ -12,7 +15,7 @@ Row {
 
     Repeater {
         model: root.visibleCount
-
+        
         delegate: Rectangle {
             id: dot
             required property int index
@@ -28,7 +31,7 @@ Row {
             width: active ? 18 : 8
             height: 8
             radius: 4
-            color: active ? "#89b4fa" : (exists ? "#585b70" : "#313244")
+            color: active ? colors.color9 : (exists ? colors.color6 : colors.color0)
 
             Behavior on width { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
             Behavior on color { ColorAnimation { duration: 140 } }

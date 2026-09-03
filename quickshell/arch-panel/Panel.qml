@@ -10,6 +10,7 @@ import "Services"
 
 PanelWindow {
     id: bar
+    Colors { id: colors }
 
     // --- geometry -----------------------------------------------------
     property int barWidth: 800
@@ -50,9 +51,9 @@ PanelWindow {
     Rectangle {
         id: shellSurface
         anchors.fill: parent
-        color: "#1e1e2e"
+        color: colors.color4
         radius: 14
-        border.color: "#313244"
+        border.color: colors.border
         border.width: 1
         clip: true
 
@@ -79,7 +80,7 @@ PanelWindow {
                     text: "\uF303"
                     font.family: "Symbols Nerd Font"
                     font.pixelSize: 16
-                    color: "#89b4fa"
+                    color: colors.color7
                 }
 
                 MouseArea {

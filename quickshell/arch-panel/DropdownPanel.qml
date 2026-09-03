@@ -20,7 +20,7 @@ Item {
 
                 Text {
                     text: "Система"
-                    color: "#a6adc8"
+                    color: colors.color15
                     font.pixelSize: 11
                     font.bold: true
                 }
@@ -32,13 +32,13 @@ Item {
                     CircularGauge {
                         value: Services.SystemUsage.cpuUsage
                         label: "CPU"
-                        ringColor: "#89b4fa"
+                        ringColor: colors.color14
                     }
 
                     CircularGauge {
                         value: Services.SystemUsage.ramUsage
                         label: "RAM"
-                        ringColor: "#a6e3a1"
+                        ringColor: colors.color14
                     }
                 }
             }
@@ -50,7 +50,7 @@ Item {
 
                 Text {
                     text: "Быстрые настройки"
-                    color: "#a6adc8"
+                    color: colors.color15
                     font.pixelSize: 11
                     font.bold: true
                 }
@@ -75,7 +75,7 @@ Item {
 
                 Text {
                     text: "Обработка изображения"
-                    color: "#a6adc8"
+                    color: colors.color15
                     font.pixelSize: 11
                     font.bold: true
                 }

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
+import "../"
 
 Rectangle {
     id: root
@@ -9,10 +10,12 @@ Rectangle {
     property string scriptPath: Quickshell.env("HOME") + "/.config/scripts/genColor.sh"
     property bool running: false
 
+    Colors { id: colors }
+
     implicitWidth: 140
     implicitHeight: 34
     radius: 8
-    color: mouseArea.pressed ? "#74c7ec" : (mouseArea.containsMouse ? "#89b4fa" : "#585b70")
+    color: mouseArea.pressed ? colors.color12 : (mouseArea.containsMouse ? colors.color7 : colors.color10)
 
     Behavior on color { ColorAnimation { duration: 100 } }
 
@@ -24,7 +27,7 @@ Rectangle {
             text: root.running ? "\uF110" : "\uF021"
             font.family: "Symbols Nerd Font"
             font.pixelSize: 13
-            color: "#1e1e2e"
+            color: colors.color13
 
             RotationAnimation on rotation {
                 running: root.running
@@ -37,7 +40,7 @@ Rectangle {
 
         Text {
             text: root.running ? "Обновление..." : "Обновить"
-            color: "#1e1e2e"
+            color: colors.color15
             font.pixelSize: 12
             font.bold: true
         }

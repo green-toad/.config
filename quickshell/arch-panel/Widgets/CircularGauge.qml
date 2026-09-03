@@ -1,14 +1,16 @@
 import QtQuick
 import QtQuick.Shapes
+import "../"
 
 // A simple circular progress ring with a label underneath.
 Item {
     id: root
+    Colors { id: colors }
 
     property real value: 0        // 0..1
     property string label: ""
-    property color ringColor: "#89b4fa"
-    property color trackColor: "#313244"
+    property color ringColor: colors.color13
+    property color trackColor: colors.color0
     property int size: 64
     property int thickness: 6
 
@@ -61,7 +63,7 @@ Item {
     Text {
         anchors.centerIn: shape
         text: Math.round(root.value * 100) + "%"
-        color: "#cdd6f4"
+        color: colors.color2
         font.pixelSize: 12
         font.bold: true
     }
@@ -71,7 +73,7 @@ Item {
         anchors.topMargin: 2
         anchors.horizontalCenter: parent.horizontalCenter
         text: root.label
-        color: "#a6adc8"
+        color: colors.color13
         font.pixelSize: 11
     }
 }

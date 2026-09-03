@@ -1,10 +1,12 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "../"
 
 // Drop an image file here; runs a user-provided bash script with the file path.
 Rectangle {
     id: root
+    Colors { id: colors }
 
     // path to the bash script to invoke with the dropped file path as $1
     property string scriptPath: Quickshell.env("HOME") + "/.config/arch-panel/scripts/on-image-drop.sh"
@@ -13,10 +15,10 @@ Rectangle {
     property string lastFile: ""
     property string statusText: "Перетащите изображение сюда"
 
-    color: hovering ? "#313244" : "#1e1e2e"
+    color: hovering ? colors.color8 : colors.color9
     radius: 10
     border.width: 2
-    border.color: hovering ? "#89b4fa" : "#45475a"
+    border.color: hovering ? colors.color14 : colors.color2
 
     Behavior on color { ColorAnimation { duration: 120 } }
     Behavior on border.color { ColorAnimation { duration: 120 } }
@@ -32,7 +34,7 @@ Rectangle {
             text: "\uF03E"   // image glyph (Nerd Font)
             font.family: "Symbols Nerd Font"
             font.pixelSize: 20
-            color: "#89b4fa"
+            color: colors.color5
         }
 
         Text {

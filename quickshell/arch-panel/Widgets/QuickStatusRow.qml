@@ -2,10 +2,12 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import "../Services" as Services
+import "../"
 
 ColumnLayout {
     id: root
     spacing: 8
+    Colors { id: colors }
 
     // ---- Volume ---------------------------------------------------
     RowLayout {
@@ -16,7 +18,7 @@ ColumnLayout {
             text: Services.AudioService.muted ? "\uF026" : "\uF028"
             font.family: "Symbols Nerd Font"
             font.pixelSize: 14
-            color: "#89b4fa"
+            color: colors.color6
             Layout.preferredWidth: 18
         }
 
@@ -31,7 +33,7 @@ ColumnLayout {
 
         Text {
             text: Math.round(Services.AudioService.volume * 100) + "%"
-            color: "#cdd6f4"
+            color: colors.color15
             font.pixelSize: 11
             Layout.preferredWidth: 32
         }
@@ -46,7 +48,7 @@ ColumnLayout {
             text: "\uF1EB"
             font.family: "Symbols Nerd Font"
             font.pixelSize: 14
-            color: Services.WifiService.connected ? "#a6e3a1" : "#f38ba8"
+            color: Services.WifiService.connected ? colors.color10 : colors.color5
             Layout.preferredWidth: 18
         }
 
@@ -54,7 +56,7 @@ ColumnLayout {
             Layout.fillWidth: true
             elide: Text.ElideRight
             text: Services.WifiService.ssid
-            color: "#cdd6f4"
+            color: colors.color15
             font.pixelSize: 12
         }
     }
@@ -69,7 +71,7 @@ ColumnLayout {
             text: Services.BatteryService.charging ? "\uF0E7" : "\uF240"
             font.family: "Symbols Nerd Font"
             font.pixelSize: 14
-            color: "#f9e2af"
+            color: colors.color10
             Layout.preferredWidth: 18
         }
 
@@ -77,7 +79,7 @@ ColumnLayout {
             Layout.fillWidth: true
             text: Math.round(Services.BatteryService.percent * 100) + "%"
                   + (Services.BatteryService.charging ? " (заряжается)" : "")
-            color: "#cdd6f4"
+            color: colors.color15
             font.pixelSize: 12
         }
     }
