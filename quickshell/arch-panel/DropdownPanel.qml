@@ -59,6 +59,21 @@ Item {
                     Layout.fillWidth: true
                 }
             }
+
+            ColumnLayout
+            {
+                Layout.preferredWidth: 50
+                Layout.fillHeight: true
+                spacing: 10
+
+                PowerButton {
+                    Layout.fillWidth: true
+                }
+
+                RebootButton {
+                    Layout.fillWidth: true
+                }
+            }
         }
 
 

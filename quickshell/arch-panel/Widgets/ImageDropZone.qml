@@ -3,13 +3,11 @@ import Quickshell
 import Quickshell.Io
 import "../"
 
-// Drop an image file here; runs a user-provided bash script with the file path.
 Rectangle {
     id: root
     Colors { id: colors }
 
-    // path to the bash script to invoke with the dropped file path as $1
-    property string scriptPath: Quickshell.env("HOME") + "/.config/arch-panel/scripts/on-image-drop.sh"
+    property string scriptPath: Quickshell.env("HOME") + "/.config/scripts/genStatColor.sh"
 
     property bool hovering: false
     property string lastFile: ""
@@ -31,7 +29,7 @@ Rectangle {
         Text {
             width: parent.width
             horizontalAlignment: Text.AlignHCenter
-            text: "\uF03E"   // image glyph (Nerd Font)
+            text: "\uF03E"
             font.family: "Symbols Nerd Font"
             font.pixelSize: 20
             color: colors.color5

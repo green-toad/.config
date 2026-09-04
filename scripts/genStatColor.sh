@@ -1,6 +1,5 @@
-wp=$(find $HOME/.config/wallpapers -maxdepth 1 -type f -print | shuf -n 1)
-
-cp $wp $HOME/.config/wallpapers/swap/image.jpg
+cp $1 $HOME/.config/wallpapers/swap/image.jpg
+wp=$HOME/.config/wallpapers/swap/image.jpg
 
 hellwal -i $wp
 

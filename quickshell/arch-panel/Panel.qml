@@ -36,7 +36,7 @@ PanelWindow {
 
     Timer {
         id: closeTimer
-        interval: 600
+        interval: 800
         onTriggered: bar.expanded = false
     }
 
@@ -59,9 +59,6 @@ PanelWindow {
 
         Behavior on implicitHeight { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
 
-        // ---------------------------------------------------------------
-        // Top row (always visible) — the 800x30 bar content
-        // ---------------------------------------------------------------
         RowLayout {
             id: topRow
             anchors.top: parent.top
