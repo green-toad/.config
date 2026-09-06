@@ -16,13 +16,34 @@ PanelWindow {
     property int barWidth: 800
     property int barHeight: 30
     property int dropdownHeight: 320
+    property int dropdownWidth: 500
+    property int dropdownX: 0
+
+    property int outerRadius: 14
+    property int dropdownRadius: 14
+    property int notchRadius: 20
+
+    property bool expanded: false
+
+    // Purely visual animation value - drives QML painting only.
+    // It must NEVER feed the window's implicitHeight (see below).
+    property real animDropdownHeight: expanded ? dropdownHeight : 0
+    Behavior on animDropdownHeight {
+        NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+    }
 
     anchors.top: true
-    // centered horizontally at the top
     margins.top: 6
 
+    // IMPORTANT: the window is allocated at its MAXIMUM possible size
+    // once, and never resized again. Resizing an actual wlr-layer-shell
+    // surface every animation frame forces a compositor reconfigure each
+    // time, which is what causes the flicker / white-flash / judder on
+    // open-close - not path/shape computation cost. Keeping the surface
+    // a constant size and animating only the QML content inside it turns
+    // the whole thing into ordinary GPU-composited repaints.
     implicitWidth: barWidth
-    implicitHeight: expanded ? barHeight + dropdownHeight : barHeight
+    implicitHeight: barHeight + dropdownHeight
 
     color: "transparent"
 
@@ -32,7 +53,18 @@ PanelWindow {
 
     exclusionMode: ExclusionMode.Normal
 
-    property bool expanded: false
+    // The window's real surface is always max-height, but only the
+    // topRow + currently-revealed dropdown area should actually receive
+    // clicks - everything else should pass through to whatever is behind
+    // the panel. `mask` gives us a clickable region independent of the
+    // surface's physical size.
+    mask: Region { item: clickableArea }
+
+    // Hyprland-specific hint: tell the compositor which pixels are
+    // actually non-transparent right now, so it can skip compositing/
+    // blurring the empty area below the collapsed dropdown. Optional,
+    // but cheap and genuinely helps on weaker iGPUs.
+    HyprlandWindow.visibleMask: Region { item: clickableArea }
 
     Timer {
         id: closeTimer
@@ -48,16 +80,40 @@ PanelWindow {
         closeTimer.restart()
     }
 
-    Rectangle {
+    Item {
         id: shellSurface
         anchors.fill: parent
-        color: colors.color4
-        radius: 14
-        border.color: colors.border
-        border.width: 1
-        clip: true
 
-        Behavior on implicitHeight { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+        // Tracks exactly the currently-visible silhouette (bar + however
+        // much of the dropdown is revealed right now). Used both for the
+        // click mask above and to size the dropdown's own clip area.
+        Item {
+            id: clickableArea
+            anchors.top: parent.top
+            anchors.left: parent.left
+            width: bar.barWidth
+            height: bar.barHeight + bar.animDropdownHeight
+        }
+
+        NotchShape {
+            id: shellShape
+            anchors.top: parent.top
+            anchors.left: parent.left
+
+            barWidth: bar.barWidth
+            barHeight: bar.barHeight
+            dropdownWidth: bar.dropdownWidth
+            dropdownX: bar.dropdownX
+            dropdownHeight: bar.animDropdownHeight
+
+            outerRadius: bar.outerRadius
+            dropdownRadius: bar.dropdownRadius
+            notchRadius: bar.notchRadius
+
+            fillColor: colors.color4
+            strokeColor: colors.border
+            strokeWidth: 1
+        }
 
         RowLayout {
             id: topRow
@@ -88,7 +144,6 @@ PanelWindow {
                 }
             }
 
-            // ---- CENTER: workspaces -----------------------------------
             Item {
                 anchors.centerIn: parent
                 Layout.fillWidth: true
@@ -99,7 +154,6 @@ PanelWindow {
                 }
             }
 
-            // ---- RIGHT: system tray -------------------------------------
             Item {
                 Layout.preferredWidth: 220
                 Layout.fillHeight: true
@@ -112,22 +166,19 @@ PanelWindow {
             }
         }
 
-        // ---------------------------------------------------------------
-        // Dropdown content, revealed under the top row
-        // ---------------------------------------------------------------
         Item {
             id: dropdown
-            anchors.top: topRow.bottom
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
+            x: bar.dropdownX
+            y: bar.barHeight
+            width: bar.dropdownWidth
+            height: bar.animDropdownHeight
+            clip: true
             visible: bar.expanded || opacity > 0
             opacity: bar.expanded ? 1 : 0
 
             Behavior on opacity { NumberAnimation { duration: 140 } }
 
             MouseArea {
-                // keep it open while hovering the dropdown itself
                 anchors.fill: parent
                 hoverEnabled: true
                 propagateComposedEvents: true
