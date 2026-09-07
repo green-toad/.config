@@ -18,13 +18,6 @@ Item {
                 Layout.fillHeight: true
                 spacing: 10
 
-                Text {
-                    text: "Система"
-                    color: colors.color15
-                    font.pixelSize: 11
-                    font.bold: true
-                }
-
                 RowLayout {
                     spacing: 14
                     Layout.alignment: Qt.AlignHCenter
@@ -47,13 +40,6 @@ Item {
                 Layout.preferredWidth: 200
                 Layout.fillHeight: true
                 spacing: 10
-
-                Text {
-                    text: "Быстрые настройки"
-                    color: colors.color15
-                    font.pixelSize: 11
-                    font.bold: true
-                }
 
                 QuickStatusRow {
                     Layout.fillWidth: true
@@ -87,13 +73,6 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 spacing: 10
-
-                Text {
-                    text: "Обработка изображения"
-                    color: colors.color15
-                    font.pixelSize: 11
-                    font.bold: true
-                }
 
                 ImageDropZone {
                     Layout.fillWidth: true
