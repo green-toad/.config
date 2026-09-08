@@ -7,7 +7,7 @@ import Quickshell
 ShellRoot {
     id: root
 
-    PanelTestCopy {
+    Panel {
         id: panel
     }
 }

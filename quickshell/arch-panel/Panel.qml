@@ -136,11 +136,14 @@ PanelWindow {
                     color: colors.color7
                 }
 
-                MouseArea {
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onEntered: bar.requestOpen()
-                    onExited: bar.requestClose()
+                HoverHandler {
+                    id: logoHover
+                    onHoveredChanged: {
+                        if (logoHover.hovered)
+                            bar.requestOpen()
+                        else
+                            pass
+                    }
                 }
             }
 
@@ -178,13 +181,14 @@ PanelWindow {
 
             Behavior on opacity { NumberAnimation { duration: 140 } }
 
-            MouseArea {
-                anchors.fill: parent
-                hoverEnabled: true
-                propagateComposedEvents: true
-                onEntered: bar.requestOpen()
-                onExited: bar.requestClose()
-                onPressed: mouse.accepted = false
+            HoverHandler {
+                id: dropdownHover
+                onHoveredChanged: {
+                    if (dropdownHover.hovered)
+                        bar.requestOpen()
+                    else
+                        bar.requestClose()
+                }
             }
 
             DropdownPanel {

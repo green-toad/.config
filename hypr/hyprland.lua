@@ -103,10 +103,10 @@ hl.env("XDG_SESSION_DESKTOP", "Hyprland")
 -- Refer to https://wiki.hypr.land/Configuring/Basics/Variables/
 hl.config({
     general = {
-        gaps_in  = 5,
-        gaps_out = 20,
+        gaps_in  = 1,
+        gaps_out = 10,
 
-        border_size = 2,
+        border_size = 0,
 
         col = {
 --            active_border   = { colors = {"rgba(33ccffee)", "rgba(00ff99ee)"}, angle = 45 },

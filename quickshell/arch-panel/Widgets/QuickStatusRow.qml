@@ -12,7 +12,7 @@ ColumnLayout {
     // ---- Вспомогательное свойство для имитации состояния Wi-Fi ----
     property bool wifiEnabled: Services.WifiService.connected
 
-    // ---- Volume ---------------------------------------------------
+    // ---- Volume
     RowLayout {
         Layout.fillWidth: true
         spacing: 8
@@ -46,13 +46,10 @@ ColumnLayout {
             }
 
             handle: Rectangle {
-                implicitWidth: 14
-                implicitHeight: 14
-                radius: 7
                 color: colors.color15
                 border.color: colors.color6
                 border.width: 1
-                // Небольшая тень для объёма
+
                 layer.enabled: true
                 layer.effect: null
             }
@@ -67,7 +64,7 @@ ColumnLayout {
         }
     }
 
-    // ---- Wi-Fi ------------------------------------------------------
+    // ---- Wi-Fi
     RowLayout {
         Layout.fillWidth: true
         spacing: 8
@@ -124,7 +121,7 @@ ColumnLayout {
         }
     }
 
-    // ---- Battery ------------------------------------------------------
+    // ---- Battery
     RowLayout {
         Layout.fillWidth: true
         spacing: 8
@@ -138,7 +135,6 @@ ColumnLayout {
             Layout.preferredWidth: 18
         }
 
-        // Кастомный индикатор батареи
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 16
@@ -148,7 +144,6 @@ ColumnLayout {
             radius: 3
             clip: true
 
-            // Заполнение
             Rectangle {
                 width: parent.width * Services.BatteryService.percent - 4
                 height: parent.height - 4
@@ -163,21 +158,10 @@ ColumnLayout {
                 }
                 Behavior on width { NumberAnimation { duration: 200 } }
             }
-
-            // Контакт батареи (маленький выступ справа)
-            Rectangle {
-                width: 4
-                height: 6
-                x: parent.width - 2
-                y: (parent.height - height) / 2
-                radius: 1
-                color: colors.color15
-            }
         }
 
         Text {
             text: Math.round(Services.BatteryService.percent * 100) + "%"
-                  + (Services.BatteryService.charging ? " ⚡" : "")
             color: colors.color15
             font.pixelSize: 11
             Layout.preferredWidth: 48
