@@ -6,4 +6,4 @@ yes | yay -Scc
 echo "full system update completed"
 
 clear
-fastfetch
+mikusays 'Updated!'
