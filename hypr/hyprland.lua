@@ -349,6 +349,13 @@ local suppressMaximizeRule = hl.window_rule({
 })
 -- suppressMaximizeRule:set_enabled(false)
 
+
+hl.config({
+    xwayland = {
+	force_zero_scaling = true
+    }
+})
+
 hl.window_rule({
     -- Fix some dragging issues with XWayland
     name  = "fix-xwayland-drags",

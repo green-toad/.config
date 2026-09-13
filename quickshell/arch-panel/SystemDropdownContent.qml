@@ -3,8 +3,17 @@ import QtQuick.Layouts
 import "Widgets"
 import "Services" as Services
 
+// The content of the "system" dropdown (CPU/RAM gauges, quick status,
+// power controls, update button, image drop zone). Pulled out of
+// DropdownPanel.qml so it's just content - it doesn't know it lives in
+// a dropdown, in DropDown, or in Panel. Use `DropDown { SystemDropdownContent { anchors.fill: parent } }`.
 Item {
     id: root
+
+    // Injected by whoever instantiates this (Panel, currently) - this
+    // component intentionally doesn't reach into an outer `colors` id
+    // the way the original DropdownPanel.qml silently did.
+    property var colors
 
     ColumnLayout {
         anchors.fill: parent
@@ -25,13 +34,13 @@ Item {
                     CircularGauge {
                         value: Services.SystemUsage.cpuUsage
                         label: "CPU"
-                        ringColor: colors.color14
+                        ringColor: root.colors.color14
                     }
 
                     CircularGauge {
                         value: Services.SystemUsage.ramUsage
                         label: "RAM"
-                        ringColor: colors.color14
+                        ringColor: root.colors.color14
                     }
                 }
             }
@@ -46,8 +55,7 @@ Item {
                 }
             }
 
-            ColumnLayout
-            {
+            ColumnLayout {
                 Layout.preferredWidth: 50
                 Layout.fillHeight: true
                 spacing: 10
@@ -62,8 +70,7 @@ Item {
             }
         }
 
-
-        ColumnLayout{
+        ColumnLayout {
             spacing: 5
             UpdateButton {
                 Layout.alignment: Qt.AlignHCenter

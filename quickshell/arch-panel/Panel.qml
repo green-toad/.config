@@ -12,25 +12,22 @@ PanelWindow {
     id: bar
     Colors { id: colors }
 
-    // --- geometry -----------------------------------------------------
+    // --- bar geometry ---------------------------------------------
     property int barWidth: 800
     property int barHeight: 30
-    property int dropdownHeight: 320
-    property int dropdownWidth: 500
-    property int dropdownX: 0
 
     property int outerRadius: 14
-    property int dropdownRadius: 14
     property int notchRadius: 20
+    property int dropdownRadius: 14
 
-    property bool expanded: false
-
-    // Purely visual animation value - drives QML painting only.
-    // It must NEVER feed the window's implicitHeight (see below).
-    property real animDropdownHeight: expanded ? dropdownHeight : 0
-    Behavior on animDropdownHeight {
-        NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
-    }
+    // The window is allocated once at its MAXIMUM possible size and
+    // never resized again (see note below). That max is the tallest
+    // any single dropdown is allowed to grow to - add every dropdown's
+    // `dropdownHeight` here as you add dropdowns.
+    readonly property real maxDropdownHeight: Math.max(
+        systemDropdown.dropdownHeight
+        // , otherDropdown.dropdownHeight
+    )
 
     anchors.top: true
     margins.top: 6
@@ -43,7 +40,7 @@ PanelWindow {
     // a constant size and animating only the QML content inside it turns
     // the whole thing into ordinary GPU-composited repaints.
     implicitWidth: barWidth
-    implicitHeight: barHeight + dropdownHeight
+    implicitHeight: barHeight + maxDropdownHeight
 
     color: "transparent"
 
@@ -54,45 +51,34 @@ PanelWindow {
     exclusionMode: ExclusionMode.Normal
 
     // The window's real surface is always max-height, but only the
-    // topRow + currently-revealed dropdown area should actually receive
-    // clicks - everything else should pass through to whatever is behind
-    // the panel. `mask` gives us a clickable region independent of the
-    // surface's physical size.
+    // topRow + however much of the tallest open dropdown is revealed
+    // right now should actually receive clicks - everything else
+    // passes through to whatever is behind the panel. `mask` gives us
+    // a clickable region independent of the surface's physical size.
     mask: Region { item: clickableArea }
 
     // Hyprland-specific hint: tell the compositor which pixels are
     // actually non-transparent right now, so it can skip compositing/
-    // blurring the empty area below the collapsed dropdown. Optional,
-    // but cheap and genuinely helps on weaker iGPUs.
+    // blurring the empty area below the collapsed dropdown(s).
     HyprlandWindow.visibleMask: Region { item: clickableArea }
-
-    Timer {
-        id: closeTimer
-        interval: 800
-        onTriggered: bar.expanded = false
-    }
-
-    function requestOpen() {
-        closeTimer.stop()
-        expanded = true
-    }
-    function requestClose() {
-        closeTimer.restart()
-    }
 
     Item {
         id: shellSurface
         anchors.fill: parent
 
-        // Tracks exactly the currently-visible silhouette (bar + however
-        // much of the dropdown is revealed right now). Used both for the
-        // click mask above and to size the dropdown's own clip area.
+        // Tracks exactly the currently-visible silhouette (bar +
+        // however much of the tallest open dropdown is revealed right
+        // now). Used both for the click mask above and to size
+        // NotchShape's clip area.
         Item {
             id: clickableArea
             anchors.top: parent.top
             anchors.left: parent.left
             width: bar.barWidth
-            height: bar.barHeight + bar.animDropdownHeight
+            height: bar.barHeight + Math.max(
+                systemDropdown.animHeight
+                // , otherDropdown.animHeight
+                , 0)
         }
 
         NotchShape {
@@ -102,13 +88,18 @@ PanelWindow {
 
             barWidth: bar.barWidth
             barHeight: bar.barHeight
-            dropdownWidth: bar.dropdownWidth
-            dropdownX: bar.dropdownX
-            dropdownHeight: bar.animDropdownHeight
-
             outerRadius: bar.outerRadius
-            dropdownRadius: bar.dropdownRadius
             notchRadius: bar.notchRadius
+            dropdownRadius: bar.dropdownRadius
+
+            // Every currently-open (or animating-closed) dropdown gets
+            // its own notch here. Adding a second dropdown to the bar
+            // is just adding its entry to this list - nothing else in
+            // NotchShape needs to change.
+            dropdowns: [
+                { x: systemDropdown.dropdownX, width: systemDropdown.dropdownWidth, height: systemDropdown.animHeight }
+                // , { x: otherDropdown.dropdownX, width: otherDropdown.dropdownWidth, height: otherDropdown.animHeight }
+            ]
 
             fillColor: colors.color4
             strokeColor: colors.border
@@ -140,9 +131,9 @@ PanelWindow {
                     id: logoHover
                     onHoveredChanged: {
                         if (logoHover.hovered)
-                            bar.requestOpen()
+                            systemDropdown.requestOpen()
                         else
-                            pass
+                            systemDropdown.requestClose()
                     }
                 }
             }
@@ -169,31 +160,26 @@ PanelWindow {
             }
         }
 
-        Item {
-            id: dropdown
-            x: bar.dropdownX
-            y: bar.barHeight
-            width: bar.dropdownWidth
-            height: bar.animDropdownHeight
-            clip: true
-            visible: bar.expanded || opacity > 0
-            opacity: bar.expanded ? 1 : 0
+        // --- dropdowns --------------------------------------------
+        // Each one is fully self-contained (own geometry, own hover/
+        // close timing) - Panel just positions it, wires up a trigger,
+        // and lists it in NotchShape.dropdowns above.
+        //
+        // To add a second dropdown:
+        //   1. Add another `DropDown { ... }` block below with its own id.
+        //   2. Give it a trigger that calls its requestOpen()/requestClose().
+        //   3. Uncomment its entry in maxDropdownHeight, clickableArea and
+        //      NotchShape.dropdowns above.
+        DropDown {
+            id: systemDropdown
+            originY: bar.barHeight
+            dropdownX: 0
+            dropdownWidth: 500
+            dropdownHeight: 320
 
-            Behavior on opacity { NumberAnimation { duration: 140 } }
-
-            HoverHandler {
-                id: dropdownHover
-                onHoveredChanged: {
-                    if (dropdownHover.hovered)
-                        bar.requestOpen()
-                    else
-                        bar.requestClose()
-                }
-            }
-
-            DropdownPanel {
+            SystemDropdownContent {
                 anchors.fill: parent
-                anchors.margins: 10
+                colors: colors
             }
         }
     }
