@@ -1,7 +1,7 @@
 cp $1 $HOME/.config/wallpapers/swap/image.jpg
 wp=$HOME/.config/wallpapers/swap/image.jpg
 
-hellwal -i $wp
+hellwal -i $1
 
 
 cp $HOME/.cache/hellwal/qlm-colors.qml $HOME/.config/quickshell/bigClock/Colors.qml

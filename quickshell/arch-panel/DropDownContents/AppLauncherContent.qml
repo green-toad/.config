@@ -48,13 +48,13 @@ Item {
             Layout.fillHeight: true
             clip: true
             model: root.filteredApps
-            highlightMoveDuration: 80
+            highlightMoveDuration: 200
 
             delegate: Rectangle {
                 width: appList.width
                 height: 44
                 radius: 8
-                color: ListView.isCurrentItem ? root.colors.color4 : "transparent"
+                color: ListView.isCurrentItem ? root.colors.color6 : "transparent"
 
                 RowLayout {
                     anchors.fill: parent
@@ -103,7 +103,21 @@ Item {
             id: searchField
             Layout.fillWidth: true
             focus: true
-            placeholderText: "Искать приложение..."
+            placeholderText: "\uf002 Search"
+            font.family: "Symbols Nerd Font"
+
+            color: colors.color7 
+            placeholderTextColor: colors.color7 
+            selectionColor: colors.color4
+            selectedTextColor: colors.color7
+
+            background: Rectangle {
+                implicitHeight: 36
+                radius: 11
+                color: colors.color2
+                border.color: colors.color4
+                border.width: 1
+            }
 
             onTextChanged: root.searchText = text
             onAccepted: root.launch(root.filteredApps[appList.currentIndex])

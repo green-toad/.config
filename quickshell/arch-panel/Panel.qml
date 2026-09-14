@@ -124,13 +124,13 @@ PanelWindow {
                 HoverHandler {
                     id: logoHover
                     onHoveredChanged: {
-                        if (logoHover.hovered)
-                            appLauncher
+                        if (logoHover.hovered){
                             appLauncher.requestHardClose()
                             systemDropdown.requestOpen()
-                        else
+                        }else{
                             appLauncher.requestHardClose()
                             systemDropdown.requestClose()
+                        }
                     }
                 }
             }
