@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
-import "Widgets"
-import "Services" as Services
+import "../Widgets"
+import "../Services" as Services
 
 // The content of the "system" dropdown (CPU/RAM gauges, quick status,
 // power controls, update button, image drop zone). Pulled out of

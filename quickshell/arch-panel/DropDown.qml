@@ -5,11 +5,13 @@ import QtQuick
 // content. Doesn't know anything about Panel, bars, other dropdowns,
 // or colors - drop as many of these into any parent as you like.
 //
-// Open/close is fully self-managed: hovering the dropdown itself keeps
-// it open, and it closes itself after `closeDelay` once the mouse
-// leaves. Whatever should *summon* it (a bar icon, a button...) just
-// calls requestOpen()/requestClose() on it from the outside.
-Item {
+// Open/close is self-managed: hovering the dropdown keeps it open and
+// (optionally) it closes itself after `closeDelay` once the mouse
+// leaves. Whatever should *summon* it (a bar icon, an IPC call...)
+// calls requestOpen()/requestClose()/toggle() on it from the outside.
+// It's also a FocusScope, so Escape closes it and any child with
+// `focus: true` (e.g. a search field) is refocused every time it opens.
+FocusScope {
     id: root
 
     // --- geometry -------------------------------------------------
@@ -17,25 +19,29 @@ Item {
     property real originY: 0
     property real dropdownX: 0
     property real dropdownWidth: 500
-    property real dropdownHeight: 320   // target height when expanded
+    property real dropdownHeight: 1000
     property int contentMargins: 10
 
     // --- behavior ---------------------------------------------------
     property bool expanded: false
     property int openAnimDuration: 180
     property int closeDelay: 800
+    // Whether losing mouse hover should schedule an auto-close.
+    // Fine for a hover-triggered bar dropdown; turn off for something
+    // opened via hotkey/IPC that's driven by the keyboard instead
+    // (e.g. an app launcher) - it should only close on Escape/toggle.
+    property bool closeOnHoverLeave: true
 
     // Purely visual animation value - drives QML painting only.
     // Consumers (e.g. NotchShape) should read this, never dropdownHeight,
     // when they need the *current* height.
+    // NOTE: must NOT be `readonly` - Behavior needs to assign to it on
+    // every change (that's literally how it animates the transition).
     property real animHeight: expanded ? dropdownHeight : 0
     Behavior on animHeight {
         NumberAnimation { duration: root.openAnimDuration; easing.type: Easing.OutCubic }
     }
 
-    // Any children placed inside `DropDown { ... }` land here instead
-    // of directly on root, so the content never has to care about
-    // margins/positioning - just `anchors.fill: parent`.
     default property alias content: contentContainer.data
 
     function requestOpen() {
@@ -45,6 +51,20 @@ Item {
     function requestClose() {
         closeTimer.restart()
     }
+    function requestHardClose(){
+        root.expanded = false
+    }
+    function toggle() {
+        if (expanded) {
+            closeTimer.stop()
+            expanded = false
+        } else {
+            requestOpen()
+        }
+    }
+
+    onExpandedChanged: if (expanded) root.forceActiveFocus()
+    Keys.onEscapePressed: root.requestClose()
 
     Timer {
         id: closeTimer
@@ -62,7 +82,12 @@ Item {
     Behavior on opacity { NumberAnimation { duration: 140 } }
 
     HoverHandler {
-        onHoveredChanged: hovered ? root.requestOpen() : root.requestClose()
+        onHoveredChanged: {
+            if (hovered)
+                root.requestOpen()
+            else if (root.closeOnHoverLeave)
+                root.requestClose()
+        }
     }
 
     Item {
