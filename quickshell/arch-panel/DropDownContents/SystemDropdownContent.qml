@@ -76,16 +76,16 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
             }
 
-            ColumnLayout {
+            ImageDropZone {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                spacing: 10
-
-                ImageDropZone {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                }
             }
+
+            // MediaControlWidget {
+            //     Layout.fillHeight: true
+            //     Layout.fillWidth: true
+            //     colors: colors
+            // }
         }
     }
 }
