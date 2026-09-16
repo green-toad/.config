@@ -38,7 +38,7 @@ PanelWindow {
     WlrLayershell.namespace: "arch-panel"
 
     WlrLayershell.keyboardFocus: appLauncher.expanded
-        ? WlrKeyboardFocus.OnDemand
+        ? WlrKeyboardFocus.Exclusive
         : WlrKeyboardFocus.None
 
     exclusionMode: ExclusionMode.Normal
