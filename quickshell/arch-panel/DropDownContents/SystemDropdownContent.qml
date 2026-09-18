@@ -3,27 +3,33 @@ import QtQuick.Layouts
 import "../Widgets"
 import "../Services" as Services
 
-// The content of the "system" dropdown (CPU/RAM gauges, quick status,
-// power controls, update button, image drop zone). Pulled out of
-// DropdownPanel.qml so it's just content - it doesn't know it lives in
-// a dropdown, in DropDown, or in Panel. Use `DropDown { SystemDropdownContent { anchors.fill: parent } }`.
+// Содержимое системного дропдауна. Wi-Fi и Bluetooth отсюда убраны -
+// у них теперь свои собственные hover-дропдауны справа на баре
+// (см. Panel.qml: wifiDropdown / bluetoothDropdown). Здесь остаются
+// только гейджи, громкость/батарея, кнопки питания, апдейт и дропзона.
+//
+// NOTE: предполагается, что CPU/RAM-гейджи и QuickStatusRow (громкость/
+// батарея) остаются здесь - в задаче было сказано оставить "только
+// системные кнопки и область перетаскивания", но полностью убирать
+// индикаторы громкости/батареи/нагрузки показалось избыточным сужением
+// функциональности. Если хотите вынести их тоже (например, в саму
+// строку бара) - скажите, это небольшая правка.
 Item {
     id: root
 
-    // Injected by whoever instantiates this (Panel, currently) - this
-    // component intentionally doesn't reach into an outer `colors` id
-    // the way the original DropdownPanel.qml silently did.
     property var colors
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 2
+        spacing: 6
 
         RowLayout {
-            spacing: 5
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            spacing: 8
 
             ColumnLayout {
-                Layout.preferredWidth: 160
+                Layout.preferredWidth: 150
                 Layout.fillHeight: true
                 spacing: 10
 
@@ -43,12 +49,6 @@ Item {
                         ringColor: root.colors.color14
                     }
                 }
-            }
-
-            ColumnLayout {
-                Layout.preferredWidth: 200
-                Layout.fillHeight: true
-                spacing: 10
 
                 QuickStatusRow {
                     Layout.fillWidth: true
@@ -56,7 +56,7 @@ Item {
             }
 
             ColumnLayout {
-                Layout.preferredWidth: 50
+                Layout.preferredWidth: 46
                 Layout.fillHeight: true
                 spacing: 10
 
@@ -71,7 +71,9 @@ Item {
         }
 
         ColumnLayout {
+            Layout.fillWidth: true
             spacing: 5
+
             UpdateButton {
                 Layout.alignment: Qt.AlignHCenter
             }
