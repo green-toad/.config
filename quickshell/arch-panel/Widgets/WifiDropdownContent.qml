@@ -4,20 +4,14 @@ import QtQuick.Controls
 import Quickshell.Networking
 import "../Services" as Services
 
-// Полноценная замена nmtui: список сетей с сигналом/замком, подключение
-// (в т.ч. по паролю), отключение, забыть сеть, тумблер и сканирование.
-// Не знает, что живёт во вкладке SystemDropdownContent - просто content.
 Item {
     id: root
 
     property var colors
 
-    // Сеть, для которой сейчас открыто поле ввода пароля.
     property var expandedNetwork: null
     property string authError: ""
 
-    // Сканируем, пока виджет виден на экране (открыта вкладка/дропдаун),
-    // и останавливаем при закрытии, чтобы не жечь батарею впустую.
     onVisibleChanged: {
         if (visible) Services.WifiService.startScan()
         else {

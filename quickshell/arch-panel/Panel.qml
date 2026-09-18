@@ -141,7 +141,7 @@ Scope {
                 // logo
                 Item {
                     id: logoArea
-                    Layout.preferredWidth: 46
+                    Layout.preferredWidth: 32
                     Layout.fillHeight: true
 
                     Text {
@@ -162,7 +162,7 @@ Scope {
                 }
                 // wifi
                 Item {
-                    Layout.preferredWidth: 26
+                    Layout.preferredWidth: 32
                     Layout.fillHeight: true
 
                     Text {
@@ -183,7 +183,7 @@ Scope {
                 }
                 // bluetooth
                 Item {
-                    Layout.preferredWidth: 26
+                    Layout.preferredWidth: 32
                     Layout.fillHeight: true
 
                     Text {

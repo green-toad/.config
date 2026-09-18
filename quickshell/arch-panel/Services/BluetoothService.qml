@@ -3,11 +3,6 @@ import QtQuick
 import Quickshell
 import Quickshell.Bluetooth
 
-// Полноценный Bluetooth сервис поверх нативного Quickshell.Bluetooth
-// (BlueZ через DBus). Требует Quickshell >= 0.2.0.
-//
-// Заменяет собой "bluetoothctl": вкл/выкл адаптера, discovery, список
-// устройств (paired/connected/battery), pair/connect/disconnect/forget.
 Singleton {
     id: root
 
@@ -20,7 +15,6 @@ Singleton {
 
     readonly property var devices: adapter ? adapter.devices.values : []
 
-    // Подключённые сверху, затем спаренные, затем остальные по имени.
     readonly property var sortedDevices: {
         const list = root.devices.slice()
         list.sort(function (a, b) {

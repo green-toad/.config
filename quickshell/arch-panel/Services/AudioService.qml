@@ -6,7 +6,7 @@ import Quickshell.Io
 Singleton {
     id: root
 
-    property real volume: 0     // 0..1
+    property real volume: 0
     property bool muted: false
 
     function refresh() { volProc.running = true }
