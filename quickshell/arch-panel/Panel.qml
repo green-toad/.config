@@ -136,12 +136,12 @@ Scope {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 height: shell.barHeight
-                spacing: 5
+                spacing: 1
 
                 // logo
                 Item {
                     id: logoArea
-                    Layout.preferredWidth: 32
+                    Layout.preferredWidth: 46
                     Layout.fillHeight: true
 
                     Text {
@@ -162,7 +162,7 @@ Scope {
                 }
                 // wifi
                 Item {
-                    Layout.preferredWidth: 32
+                    Layout.preferredWidth: 46
                     Layout.fillHeight: true
 
                     Text {
@@ -183,7 +183,7 @@ Scope {
                 }
                 // bluetooth
                 Item {
-                    Layout.preferredWidth: 32
+                    Layout.preferredWidth: 46
                     Layout.fillHeight: true
 
                     Text {
@@ -243,7 +243,8 @@ Scope {
                 originY: shell.barHeight
                 dropdownX: 50
                 dropdownWidth: 340
-                dropdownHeight: 320
+                dropdownHeight: Services.WifiService.wifiEnabled ? 320 : 60
+                closeDelay: 10
 
                 WifiDropdownContent {
                     anchors.fill: parent
@@ -256,7 +257,8 @@ Scope {
                 originY: shell.barHeight
                 dropdownX: 100
                 dropdownWidth: 340
-                dropdownHeight: 320
+                dropdownHeight: Services.BluetoothService.enabled ? 320 : 60
+                closeDelay: 10
 
                 BluetoothDropdownContent {
                     anchors.fill: parent
