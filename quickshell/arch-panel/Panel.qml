@@ -156,7 +156,7 @@ Scope {
                         id: logoHover
                         onHoveredChanged: {
                             if (logoHover.hovered) shell.openBarDropdown(systemDropdown)
-                            else systemDropdown.requestClose()
+                            // else systemDropdown.requestClose() зло во плоти
                         }
                     }
                 }
@@ -177,7 +177,7 @@ Scope {
                         id: wifiHover
                         onHoveredChanged: {
                             if (wifiHover.hovered) shell.openBarDropdown(wifiDropdown)
-                            else wifiDropdown.requestClose()
+                            // else wifiDropdown.requestClose() штука работает только для иконки, но не для дропдауна
                         }
                     }
                 }
@@ -198,7 +198,7 @@ Scope {
                         id: btHover
                         onHoveredChanged: {
                             if (btHover.hovered) shell.openBarDropdown(bluetoothDropdown)
-                            else bluetoothDropdown.requestClose()
+                            // else bluetoothDropdown.requestClose() когда уводишь курсор с иконки, бар тут же закрывается
                         }
                     }
                 }

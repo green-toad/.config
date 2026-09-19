@@ -60,8 +60,8 @@ Item {
             BusyIndicator {
                 visible: Services.BluetoothService.discovering
                 running: visible
-                implicitWidth: 16
-                implicitHeight: 16
+                implicitWidth: 25
+                implicitHeight: 25
             }
 
             Switch {

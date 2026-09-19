@@ -31,7 +31,6 @@ Item {
         anchors.fill: parent
         spacing: 6
 
-        // --- header: статус + тумблер + сканирование ---
         RowLayout {
             Layout.fillWidth: true
             spacing: 8
@@ -59,8 +58,8 @@ Item {
             BusyIndicator {
                 visible: Services.WifiService.scanning
                 running: visible
-                implicitWidth: 16
-                implicitHeight: 16
+                implicitWidth: 25
+                implicitHeight: 25
             }
 
             Text {
@@ -88,7 +87,6 @@ Item {
 
         Rectangle { Layout.fillWidth: true; height: 1; color: root.colors.color8; opacity: 0.35 }
 
-        // --- список сетей ---
         ListView {
             id: netList
             Layout.fillWidth: true
@@ -150,7 +148,6 @@ Item {
                             color: root.colors.color10
                         }
 
-                        // "Забыть" — только для известных сетей, показываем по ховеру
                         Text {
                             visible: modelData.known && rowHover.hovered
                             text: "\uF1F8"
@@ -198,7 +195,6 @@ Item {
                     }
                 }
 
-                // --- инлайн-поле пароля для защищённых незнакомых сетей ---
                 RowLayout {
                     Layout.fillWidth: true
                     Layout.leftMargin: 10
