@@ -64,9 +64,48 @@ Item {
                 implicitHeight: 25
             }
 
-            Switch {
-                checked: Services.BluetoothService.enabled
-                onToggled: Services.BluetoothService.setEnabled(checked)
+            // Switch {
+            //     checked: Services.BluetoothService.enabled
+            //     onToggled: Services.BluetoothService.setEnabled(checked)
+            // }
+
+            Rectangle {
+                id: bluetoothButton
+
+                implicitWidth: 27
+                implicitHeight: 27
+                radius: 13
+                color: mouseArea.pressed ? 
+                    root.colors.color8 : 
+                    (
+                        mouseArea.containsMouse ? 
+                        root.colors.color2 : 
+                        (
+                            Services.BluetoothService.enabled ?
+                            root.colors.color10 : 
+                            root.colors.color8
+                        )
+                    )
+
+                Behavior on color { ColorAnimation { duration: 100 } }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "\u{F293}"
+                    font.family: "Symbols Nerd Font"
+                    font.pixelSize: 17
+                    color: Services.BluetoothService.enabled
+                        ? root.colors.color13
+                        : root.colors.color11
+                }
+
+                MouseArea {
+                    id: mouseArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: Services.BluetoothService.setEnabled(!Services.BluetoothService.enabled)
+                }
             }
         }
 

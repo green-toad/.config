@@ -78,10 +78,50 @@ Item {
                 }
             }
 
-            Switch {
-                enabled: Services.WifiService.wifiHardwareEnabled
-                checked: Services.WifiService.wifiEnabled
-                onToggled: Services.WifiService.setEnabled(checked)
+            // Switch {
+            //     enabled: Services.WifiService.wifiHardwareEnabled
+            //     checked: Services.WifiService.wifiEnabled
+            //     onToggled: Services.WifiService.setEnabled(checked)
+            // }
+
+            Rectangle {
+                id: wifiButton
+
+                implicitWidth: 24
+                implicitHeight: 24
+                radius: 11
+                color: mouseArea.pressed ?
+                    root.colors.color8 :
+                    (
+                        mouseArea.containsMouse ?
+                        root.colors.color2 :
+                        (
+                            Services.WifiService.wifiEnabled ?
+                            root.colors.color10 :
+                            root.colors.color8
+                        )
+                    )
+
+                Behavior on color { ColorAnimation { duration: 100 } }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "\u{F1EB}"
+                    font.family: "Symbols Nerd Font"
+                    font.pixelSize: 13
+                    color: Services.WifiService.wifiEnabled
+                        ? root.colors.color13
+                        : root.colors.color11
+                }
+
+                MouseArea {
+                    id: mouseArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    enabled: Services.WifiService.wifiHardwareEnabled
+                    onClicked: Services.WifiService.setEnabled(!Services.WifiService.wifiEnabled)
+                }
             }
         }
 
