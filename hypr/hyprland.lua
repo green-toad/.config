@@ -64,8 +64,8 @@ end)
 
 -- See https://wiki.hypr.land/Configuring/Advanced-and-Cool/Environment-variables/
 
-hl.env("XCURSOR_SIZE", "17")
-hl.env("HYPRCURSOR_SIZE", "17")
+hl.env("XCURSOR_SIZE", "15")
+hl.env("HYPRCURSOR_SIZE", "15")
 
 
 hl.env("GDK_BACKEND", "wayland,x11,*")

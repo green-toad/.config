@@ -6,7 +6,7 @@ sudo pacman -S --needed --noconfirm \
     pipewire pipewire-pulse pipewire-alsa pipewire-audio wireplumber \
     brightnessctl playerctl \
     hyprpaper fastfetch kitty xdg-desktop-portal-hyprland \
-    hyprpolkitagent curl wget docker-compose ly
+    hyprpolkitagent curl wget docker-compose ly ttf-nerd-fonts-symbols
 
 sudo systemctl enable --now bluetooth
 systemctl --user enable --now pipewire pipewire-pulse wireplumber
@@ -52,7 +52,7 @@ sudo usermod -aG docker "$USER"
 sudo hostnamectl set-hostname nyashtop
 sudo sed -i "s/127.0.1.1.*/127.0.1.1 nyashtop/" /etc/hosts
 
-sudo systemctl enable --now ly@tty1.service
+sudo systemctl enable ly@tty1.service
 sudo systemctl disable getty@tty1.service
 
 sudo cp ~/.config/ly/config.ini /etc/ly/config.ini
