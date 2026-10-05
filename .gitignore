@@ -20,3 +20,5 @@
 !wofi/**
 !quickshell/
 !quickshell/**
+!ly/
+!ly/**

@@ -23,8 +23,7 @@
       "right": 4
     },
     "printRemaining": true,
-    "preserveAspectRatio": false,
-    "recache": false,
+    "preserveAspectRatio": false, 
     "position": "left",
     "chafa": {
       "fgOnly": false,
