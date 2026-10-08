@@ -6,7 +6,8 @@ sudo pacman -S --needed --noconfirm \
     pipewire pipewire-pulse pipewire-alsa pipewire-audio wireplumber \
     brightnessctl playerctl \
     hyprpaper fastfetch kitty xdg-desktop-portal-hyprland \
-    hyprpolkitagent curl wget docker-compose ly ttf-nerd-fonts-symbols
+    hyprpolkitagent curl wget docker-compose ly ttf-nerd-fonts-symbols \
+    hyprshot nmap metasploit ttf-dejavu
 
 sudo systemctl enable --now bluetooth
 systemctl --user enable --now pipewire pipewire-pulse wireplumber
