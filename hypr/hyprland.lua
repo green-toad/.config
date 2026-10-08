@@ -32,7 +32,7 @@
 
 -- Set programs that you use
 local terminal    = "kitty"
-local fileManager = "nautilus"
+local fileManager = "hyprfm"
 -- local menu        = "wofi"
 local menu	  = "qs -c arch-panel ipc call launcher toggle"
 
