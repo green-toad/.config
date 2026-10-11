@@ -9,5 +9,7 @@ cp $HOME/.cache/hellwal/qlm-colors.qml $HOME/.config/quickshell/bigClock/Colors.
 
 cp $HOME/.cache/hellwal/qlm-colors.qml $HOME/.config/quickshell/arch-panel/Colors.qml
 
+cp $HOME/.cache/hellwal/qlm-colors.qml $HOME/.config/quickshell/kaomoji/Colors.qml
+
 killall hyprpaper
 hyprpaper &

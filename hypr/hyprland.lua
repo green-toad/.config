@@ -53,6 +53,7 @@ hl.on("hyprland.start", function ()
    hl.exec_cmd("xray -c ~/vpnConfig.json &")
    hl.exec_cmd("QS_NO_RELOAD_POPUP=1 qs -c bigClock &")
    hl.exec_cmd("QS_NO_RELOAD_POPUP=1 qs -c arch-panel")
+   hl.exec_cmd("QS_NO_RELOAD_POPUP=1 qs -c kaomoji")
 --   hl.exec_cmd("nm-applet")
 --   hl.exec_cmd("waybar & hyprpaper & firefox")
 end)
@@ -290,6 +291,12 @@ hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + D", hl.dsp.exec_cmd(menu))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))    -- dwindle only
+
+-- kaomoji shower
+
+hl.bind("ALT + F", hl.dsp.exec_cmd("qs -c ~/.config/quickshell/kaomoji ipc call kaomoji show_pan"))
+hl.bind("ALT + F", hl.dsp.exec_cmd("qs -c ~/.config/quickshell/kaomoji ipc call kaomoji hide_pan"), { release = true })
+
 
 -- Move focus with mainMod + arrow keys
 hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))
