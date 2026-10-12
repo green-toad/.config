@@ -32,7 +32,7 @@
 
 -- Set programs that you use
 local terminal    = "kitty"
-local fileManager = "hyprfm"
+local fileManager = "kitty elio"
 -- local menu        = "wofi"
 local menu	  = "qs -c arch-panel ipc call launcher toggle"
 

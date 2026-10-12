@@ -11,5 +11,7 @@ cp $HOME/.cache/hellwal/qlm-colors.qml $HOME/.config/quickshell/arch-panel/Color
 
 cp $HOME/.cache/hellwal/qlm-colors.qml $HOME/.config/quickshell/kaomoji/Colors.qml
 
+cp $HOME/.cache/hellwal/theme.toml .config/elio/theme.toml
+
 killall hyprpaper
 hyprpaper &
