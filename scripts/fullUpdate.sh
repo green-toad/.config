@@ -6,4 +6,4 @@ yay -Scc --noconfirm
 echo "full system update completed"
 
 clear
-mikusays 'Updated!'
+mikusays 'Updated! (*^▽^*)'

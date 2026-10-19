@@ -32,8 +32,25 @@ Scope {
     id: shell
     Colors { id: colors }
 
-    property int barWidth: 800
+    // Панель в покое - компактная "таблетка" ровно под рабочие столы.
+    // При наведении разворачивается до expandedWidth (иконки слева, трей справа).
+    property int expandedWidth: 800
+    property int collapsedPadding: 18
+    readonly property real collapsedWidth: workspaces.width + collapsedPadding * 2
     property int barHeight: 30
+    property bool expanded: false
+
+    // Нельзя сворачиваться, пока открыт любой дропдаун или меню трея
+    readonly property bool busy: systemDropdown.expanded || wifiDropdown.expanded
+                                 || bluetoothDropdown.expanded || audioDropdown.expanded
+                                 || tray.menuOpen
+    onBusyChanged: if (!busy) collapseTimer.restart()
+
+    Timer {
+        id: collapseTimer
+        interval: 350
+        onTriggered: if (!barHover.hovered && !shell.busy) shell.expanded = false
+    }
 
     property int outerRadius: 14
     property int notchRadius: 20
@@ -41,7 +58,7 @@ Scope {
 
     function openBarDropdown(target) {
         launcherWindow.closeLauncher()
-        for (const d of [systemDropdown, wifiDropdown, bluetoothDropdown]) {
+        for (const d of [systemDropdown, wifiDropdown, bluetoothDropdown, audioDropdown]) {
             if (d !== target) d.requestHardClose()
         }
         target.requestOpen()
@@ -54,12 +71,14 @@ Scope {
             systemDropdown.requestHardClose()
             wifiDropdown.requestHardClose()
             bluetoothDropdown.requestHardClose()
+            audioDropdown.requestHardClose()
             launcherWindow.toggleLauncher()
         }
         function open(): void {
             systemDropdown.requestHardClose()
             wifiDropdown.requestHardClose()
             bluetoothDropdown.requestHardClose()
+            audioDropdown.requestHardClose()
             launcherWindow.openLauncher()
         }
         function close(): void {
@@ -73,11 +92,16 @@ Scope {
         anchors.top: true
         margins.top: 6
 
-        implicitWidth: shell.barWidth
+        // Окно всегда максимальной ширины (по центру, т.к. якорь только сверху):
+        // ресайзить Wayland-поверхность на каждом кадре анимации - дорого.
+        // Сворачивается/разворачивается только видимая часть (barRoot),
+        // а mask отдаёт события лишь ей.
+        implicitWidth: shell.expandedWidth
         implicitHeight: shell.barHeight + Math.max(
             systemDropdown.dropdownHeight,
             wifiDropdown.dropdownHeight,
-            bluetoothDropdown.dropdownHeight
+            bluetoothDropdown.dropdownHeight,
+            audioDropdown.dropdownHeight
         )
 
         color: "transparent"
@@ -89,23 +113,34 @@ Scope {
 
         exclusionMode: ExclusionMode.Normal
 
-        mask: Region { item: clickableArea }
-        HyprlandWindow.visibleMask: Region { item: clickableArea }
+        mask: Region { item: barRoot }
+        HyprlandWindow.visibleMask: Region { item: barRoot }
 
         Item {
-            id: shellSurface
-            anchors.fill: parent
+            id: barRoot
+            anchors.top: parent.top
+            anchors.horizontalCenter: parent.horizontalCenter
 
-            Item {
-                id: clickableArea
-                anchors.top: parent.top
-                anchors.left: parent.left
-                width: shell.barWidth
-                height: shell.barHeight + Math.max(
-                    systemDropdown.animHeight,
-                    wifiDropdown.animHeight,
-                    bluetoothDropdown.animHeight,
-                    0)
+            width: shell.expanded ? shell.expandedWidth : shell.collapsedWidth
+            height: shell.barHeight + Math.max(
+                systemDropdown.animHeight,
+                wifiDropdown.animHeight,
+                bluetoothDropdown.animHeight,
+                audioDropdown.animHeight,
+                0)
+
+            Behavior on width { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
+
+            HoverHandler {
+                id: barHover
+                onHoveredChanged: {
+                    if (hovered) {
+                        collapseTimer.stop()
+                        shell.expanded = true
+                    } else {
+                        collapseTimer.restart()
+                    }
+                }
             }
 
             NotchShape {
@@ -113,7 +148,7 @@ Scope {
                 anchors.top: parent.top
                 anchors.left: parent.left
 
-                barWidth: shell.barWidth
+                barWidth: barRoot.width
                 barHeight: shell.barHeight
                 outerRadius: shell.outerRadius
                 notchRadius: shell.notchRadius
@@ -122,7 +157,8 @@ Scope {
                 dropdowns: [
                     { x: systemDropdown.dropdownX, width: systemDropdown.dropdownWidth, height: systemDropdown.animHeight },
                     { x: wifiDropdown.dropdownX, width: wifiDropdown.dropdownWidth, height: wifiDropdown.animHeight },
-                    { x: bluetoothDropdown.dropdownX, width: bluetoothDropdown.dropdownWidth, height: bluetoothDropdown.animHeight }
+                    { x: bluetoothDropdown.dropdownX, width: bluetoothDropdown.dropdownWidth, height: bluetoothDropdown.animHeight },
+                    { x: audioDropdown.dropdownX, width: audioDropdown.dropdownWidth, height: audioDropdown.animHeight }
                 ]
 
                 fillColor: colors.color4
@@ -130,99 +166,87 @@ Scope {
                 strokeWidth: 1
             }
 
-            RowLayout {
-                id: topRow
+            // Иконка слева. Видна только в развёрнутой панели.
+            component BarIcon: Item {
+                id: icon
+                property string glyph
+                property int glyphSize: 14
+                property color glyphColor: "white"
+                signal entered()
+
+                width: 46
+                height: parent ? parent.height : 30
+
+                Text {
+                    anchors.centerIn: parent
+                    text: icon.glyph
+                    font.family: "Symbols Nerd Font"
+                    font.pixelSize: icon.glyphSize
+                    color: icon.glyphColor
+                }
+
+                HoverHandler {
+                    onHoveredChanged: if (hovered) icon.entered()
+                }
+            }
+
+            Row {
+                id: leftIcons
                 anchors.top: parent.top
                 anchors.left: parent.left
-                anchors.right: parent.right
                 height: shell.barHeight
                 spacing: 1
 
+                opacity: shell.expanded ? 1 : 0
+                visible: opacity > 0
+                Behavior on opacity { NumberAnimation { duration: 160 } }
+
                 // logo
-                Item {
-                    id: logoArea
-                    Layout.preferredWidth: 46
-                    Layout.fillHeight: true
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "\uF303"
-                        font.family: "Symbols Nerd Font"
-                        font.pixelSize: 16
-                        color: colors.color7
-                    }
-
-                    HoverHandler {
-                        id: logoHover
-                        onHoveredChanged: {
-                            if (logoHover.hovered) shell.openBarDropdown(systemDropdown)
-                            // else systemDropdown.requestClose() зло во плоти
-                        }
-                    }
+                // (systemDropdown.requestClose() при уходе курсора - зло во плоти, не возвращать)
+                BarIcon {
+                    glyph: "\uF303"
+                    glyphSize: 16
+                    glyphColor: colors.color7
+                    onEntered: shell.openBarDropdown(systemDropdown)
                 }
                 // wifi
-                Item {
-                    Layout.preferredWidth: 46
-                    Layout.fillHeight: true
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "\uF1EB"
-                        font.family: "Symbols Nerd Font"
-                        font.pixelSize: 14
-                        color: Services.WifiService.wifiEnabled ? colors.color7 : colors.color5
-                    }
-
-                    HoverHandler {
-                        id: wifiHover
-                        onHoveredChanged: {
-                            if (wifiHover.hovered) shell.openBarDropdown(wifiDropdown)
-                            // else wifiDropdown.requestClose() штука работает только для иконки, но не для дропдауна
-                        }
-                    }
+                BarIcon {
+                    glyph: "\uF1EB"
+                    glyphColor: Services.WifiService.wifiEnabled ? colors.color7 : colors.color5
+                    onEntered: shell.openBarDropdown(wifiDropdown)
                 }
                 // bluetooth
-                Item {
-                    Layout.preferredWidth: 46
-                    Layout.fillHeight: true
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "\uF294"
-                        font.family: "Symbols Nerd Font"
-                        font.pixelSize: 14
-                        color: Services.BluetoothService.enabled ? colors.color7 : colors.color5
-                    }
-
-                    HoverHandler {
-                        id: btHover
-                        onHoveredChanged: {
-                            if (btHover.hovered) shell.openBarDropdown(bluetoothDropdown)
-                            // else bluetoothDropdown.requestClose() когда уводишь курсор с иконки, бар тут же закрывается
-                        }
-                    }
+                BarIcon {
+                    glyph: "\uF294"
+                    glyphColor: Services.BluetoothService.enabled ? colors.color7 : colors.color5
+                    onEntered: shell.openBarDropdown(bluetoothDropdown)
                 }
-                // workspaces
-                Item {
-                    anchors.centerIn: parent
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-
-                    Workspaces {
-                        anchors.centerIn: parent
-                    }
+                // звук
+                BarIcon {
+                    glyph: Services.AudioService.muted ? "\uF026" : "\uF028"
+                    glyphColor: Services.AudioService.muted ? colors.color5 : colors.color7
+                    onEntered: shell.openBarDropdown(audioDropdown)
                 }
-                //tray
-                Item {
-                    Layout.preferredWidth: 220
-                    Layout.fillHeight: true
+            }
 
-                    SysTray {
-                        anchors.right: parent.right
-                        anchors.rightMargin: 10
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                }
+            // workspaces - всегда видны, по центру; от их ширины считается
+            // размер свёрнутой панели
+            Workspaces {
+                id: workspaces
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: (shell.barHeight - height) / 2
+            }
+
+            // tray - только в развёрнутой панели
+            SysTray {
+                id: tray
+                anchors.right: parent.right
+                anchors.rightMargin: 12
+                y: (shell.barHeight - height) / 2
+
+                opacity: shell.expanded ? 1 : 0
+                visible: opacity > 0
+                Behavior on opacity { NumberAnimation { duration: 160 } }
             }
 
             DropDown {
@@ -261,6 +285,20 @@ Scope {
                 closeDelay: 10
 
                 BluetoothDropdownContent {
+                    anchors.fill: parent
+                    colors: colors
+                }
+            }
+
+            DropDown {
+                id: audioDropdown
+                originY: shell.barHeight
+                dropdownX: 150
+                dropdownWidth: 340
+                dropdownHeight: 200
+                closeDelay: 10
+
+                AudioDropdownContent {
                     anchors.fill: parent
                     colors: colors
                 }

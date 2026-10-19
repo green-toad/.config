@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Mpris
 import Quickshell.Services.Pipewire
+import "../Services" as Services
 
 Rectangle {
     id: root
@@ -12,9 +13,10 @@ Rectangle {
     // Public API
     // ------------------------------------------------------------------
     property var colors
+    property real seekStep: 10   // секунд на кнопки перемотки
 
     property url playingIcon: Qt.resolvedUrl("../Assets/kuru.gif")
-    property url pausedIcon: Qt.resolvedUrl("../Assets/archio.png")
+    property url pausedIcon: Qt.resolvedUrl("../Assets/archico.png")
 
     // ------------------------------------------------------------------
     // Size-aware scaling
@@ -70,7 +72,7 @@ Rectangle {
     readonly property PwNode sink: Pipewire.defaultAudioSink
     readonly property real sinkVolume: sink?.audio?.volume ?? 0
     readonly property bool sinkMuted: sink?.audio?.muted ?? true
-    readonly property bool isPlaying: Players.active?.playbackState === MprisPlaybackState.Playing
+    readonly property bool isPlaying: Services.Players.active?.playbackState === MprisPlaybackState.Playing
 
     readonly property bool audioActive: isPlaying && !sinkMuted && sinkVolume > 0.001
 
@@ -118,7 +120,7 @@ Rectangle {
                             ]
                     font.family: "monospace"
                     font.pixelSize: root.barFontSize
-                    color: colors?.color4 ?? "#ffffff"
+                    color: colors?.color6 ?? "#ffffff"
                     opacity: 0.55 + 0.45 * level
                     Layout.fillWidth: true
                     Layout.fillHeight: true
@@ -200,13 +202,21 @@ Rectangle {
     RowLayout {
         id: controlRow
         anchors.centerIn: parent
+        opacity: Services.Players.active ? 1 : 0.4
         spacing: root.rowSpacing
 
         MediaIconButton {
             glyph: "⏮"
             size: root.iconSize
-            iconColor: colors?.color12 ?? "#ffffff"
-            onClicked: Players.active?.previous()
+            iconColor: colors?.color7 ?? "#ffffff"
+            onClicked: Services.Players.active?.previous()
+        }
+
+        MediaIconButton {
+            glyph: "⏪"
+            size: root.iconSize
+            iconColor: colors?.color7 ?? "#ffffff"
+            onClicked: Services.Players.seekBy(-root.seekStep)
         }
 
         Item {
@@ -218,7 +228,7 @@ Rectangle {
             Image {
                 anchors.fill: parent
                 fillMode: Image.PreserveAspectFit
-                source: Players.active?.playbackState === MprisPlaybackState.Playing
+                source: Services.Players.active?.playbackState === MprisPlaybackState.Playing
                         ? root.playingIcon
                         : root.pausedIcon
             }
@@ -228,15 +238,22 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onClicked: Players.active?.togglePlaying()
+                onClicked: Services.Players.active?.togglePlaying()
             }
+        }
+
+        MediaIconButton {
+            glyph: "⏩"
+            size: root.iconSize
+            iconColor: colors?.color7 ?? "#ffffff"
+            onClicked: Services.Players.seekBy(root.seekStep)
         }
 
         MediaIconButton {
             glyph: "⏭"
             size: root.iconSize
-            iconColor: colors?.color12 ?? "#ffffff"
-            onClicked: Players.active?.next()
+            iconColor: colors?.color7 ?? "#ffffff"
+            onClicked: Services.Players.active?.next()
         }
     }
 
