@@ -31,6 +31,22 @@ FocusScope {
     // opened via hotkey/IPC that's driven by the keyboard instead
     // (e.g. an app launcher) - it should only close on Escape/toggle.
     property bool closeOnHoverLeave: true
+    // Открываться по наведению курсора на сам дропдаун (для лаунчера выключено)
+    property bool hoverOpens: true
+    // Забирать клавиатурный фокус при открытии (бар-дропдауны не должны
+    // отбирать фокус у поля поиска лаунчера, когда рисуются поверх него)
+    property bool takeFocus: true
+    // При открытии подниматься над соседями: открывающийся дропдаун
+    // всегда рисуется поверх закрывающегося
+    property bool raiseOnOpen: true
+
+    // --- внешний вид (по умолчанию ничего не рисуем) ---------------------
+    // Непрозрачная подложка нужна, чтобы дропдаун полностью перекрывал то,
+    // что лежит под ним (другой дропдаун, лаунчер).
+    property color backgroundColor: "transparent"
+    property color borderColor: "transparent"
+    property bool showBorder: false
+    property real cornerRadius: 14
 
     // Purely visual animation value - drives QML painting only.
     // Consumers (e.g. NotchShape) should read this, never dropdownHeight,
@@ -44,8 +60,17 @@ FocusScope {
 
     default property alias content: contentContainer.data
 
+    function raise() {
+        var sib = root.parent ? root.parent.children : []
+        var m = 0
+        for (var i = 0; i < sib.length; i++) {
+            if (sib[i] !== root && sib[i].z > m) m = sib[i].z
+        }
+        root.z = m + 1
+    }
     function requestOpen() {
         closeTimer.stop()
+        if (!expanded && raiseOnOpen) raise()
         expanded = true
     }
     function requestClose() {
@@ -63,7 +88,7 @@ FocusScope {
         }
     }
 
-    onExpandedChanged: if (expanded) root.forceActiveFocus()
+    onExpandedChanged: if (expanded && root.takeFocus) root.forceActiveFocus()
     Keys.onEscapePressed: root.requestClose()
 
     Timer {
@@ -81,7 +106,21 @@ FocusScope {
     opacity: expanded ? 1 : 0
     Behavior on opacity { NumberAnimation { duration: 140 } }
 
+    // Подложка: верх прямой (уходит под бар за clip), низ скруглён
+    Rectangle {
+        z: -1
+        x: 0
+        y: -root.cornerRadius
+        width: parent.width
+        height: parent.height + root.cornerRadius
+        radius: root.cornerRadius
+        color: root.backgroundColor
+        border.width: root.showBorder ? 1 : 0
+        border.color: root.borderColor
+    }
+
     HoverHandler {
+        enabled: root.hoverOpens
         onHoveredChanged: {
             if (hovered)
                 root.requestOpen()

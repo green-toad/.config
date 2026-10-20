@@ -9,25 +9,18 @@ import "Widgets"
 import "Services" as Services
 import "DropDownContents"
 
-// Корень теперь Scope, а не PanelWindow: лаунчер вынесен в СВОЁ отдельное
-// Wayland-окно (launcherWindow), физически изолированное от бара (bar).
+// Всё живёт в ОДНОМ окне (bar) и рисуется одним силуэтом (NotchShape):
+// верхняя "таблетка" с рабочими столами, из неё разворачиваются лаунчер
+// и дропдауны бара. Дропдауны бара могут рисоваться поверх лаунчера -
+// открывающийся всегда выше закрывающегося (см. DropDown.raise()).
 //
-// Почему: WlrLayershell.keyboardFocus - это свойство всей поверхности
-// окна. Раньше лаунчер и системный дропдаун жили в одном PanelWindow, и
-// любой keyboard-grab на этой поверхности (Exclusive, а также
-// HyprlandFocusGrab) на Hyprland задевает hover-доставку у соседних
-// попапов в ТОЙ ЖЕ surface - грэб порождает синтетический pointer-focus
-// у истока поверхности (0,0), а там как раз иконка логотипа, поэтому
-// Super+D внезапно триггерил системное меню. Разные окна = разные
-// surfaces = грэб физически не может задеть бар.
-//
-// Разделение ролей:
-//  - bar: ТОЛЬКО курсор. Никаких хоткеев, никогда не просит клавиатуру.
-//    Системный / Wi-Fi / Bluetooth дропдауны открываются по наведению
-//    на свою иконку и закрываются, когда курсор уходит с попапа.
-//  - launcherWindow: ТОЛЬКО клавиатура/IPC. Открытие/закрытие - хоткей
-//    (super+D -> `qs ipc call launcher toggle`) или Escape. Курсор внутри
-//    нужен только чтобы кликнуть по приложению - никакого hover-open/close.
+// Клавиатура: лаунчер берёт Exclusive-фокус окна, пока открыт. Раньше из-за
+// этого на Hyprland приходил синтетический hover в точку (0,0) окна и
+// Super+D случайно открывал системное меню под логотипом. Поэтому после
+// открытия лаунчера на короткое время (hoverGuard) hover по иконкам бара
+// игнорируется.
+//  - иконки бара: только курсор (hover открывает дропдаун);
+//  - лаунчер: хоткей/IPC (super+D -> `qs ipc call launcher toggle`) или Escape.
 Scope {
     id: shell
     Colors { id: colors }
@@ -39,6 +32,14 @@ Scope {
     readonly property real collapsedWidth: workspaces.width + collapsedPadding * 2
     property int barHeight: 30
     property bool expanded: false
+
+    // Лаунчер: ширина, на которую "растягивается" таблетка, и состояние
+    property int launcherWidth: 500
+    property bool launcherWanted: false
+    // true пока лаунчер открыт ИЛИ ещё сворачивается: ширина бара держится
+    // до конца анимации высоты, потом сжимается обратно
+    readonly property bool launcherShown: launcherWanted || launcherPopup.animHeight > 0.5
+    property bool hoverGuard: false
 
     // Нельзя сворачиваться, пока открыт любой дропдаун или меню трея
     readonly property bool busy: systemDropdown.expanded || wifiDropdown.expanded
@@ -57,33 +58,56 @@ Scope {
     property int dropdownRadius: 14
 
     function openBarDropdown(target) {
-        launcherWindow.closeLauncher()
+        if (shell.hoverGuard) return
         for (const d of [systemDropdown, wifiDropdown, bluetoothDropdown, audioDropdown]) {
             if (d !== target) d.requestHardClose()
         }
         target.requestOpen()
     }
 
+    function closeBarDropdowns() {
+        systemDropdown.requestHardClose()
+        wifiDropdown.requestHardClose()
+        bluetoothDropdown.requestHardClose()
+        audioDropdown.requestHardClose()
+    }
+
+    function openLauncher() {
+        if (launcherWanted) return
+        closeBarDropdowns()
+        launcherWanted = true
+        hoverGuard = true
+        hoverGuardTimer.restart()
+        // сначала бар растягивается до ширины лаунчера, затем он падает вниз
+        launcherOpenTimer.interval = barRoot.width >= launcherWidth - 1 ? 1 : 140
+        launcherOpenTimer.restart()
+    }
+    function closeLauncher() {
+        launcherWanted = false
+        launcherOpenTimer.stop()
+        launcherPopup.requestHardClose()
+    }
+    function toggleLauncher() {
+        if (launcherWanted) closeLauncher()
+        else openLauncher()
+    }
+
+    Timer {
+        id: launcherOpenTimer
+        onTriggered: if (shell.launcherWanted) launcherPopup.requestOpen()
+    }
+    Timer {
+        id: hoverGuardTimer
+        interval: 450
+        onTriggered: shell.hoverGuard = false
+    }
+
     IpcHandler {
         target: "launcher"
 
-        function toggle(): void {
-            systemDropdown.requestHardClose()
-            wifiDropdown.requestHardClose()
-            bluetoothDropdown.requestHardClose()
-            audioDropdown.requestHardClose()
-            launcherWindow.toggleLauncher()
-        }
-        function open(): void {
-            systemDropdown.requestHardClose()
-            wifiDropdown.requestHardClose()
-            bluetoothDropdown.requestHardClose()
-            audioDropdown.requestHardClose()
-            launcherWindow.openLauncher()
-        }
-        function close(): void {
-            launcherWindow.closeLauncher()
-        }
+        function toggle(): void { shell.toggleLauncher() }
+        function open(): void { shell.openLauncher() }
+        function close(): void { shell.closeLauncher() }
     }
 
     PanelWindow {
@@ -101,7 +125,8 @@ Scope {
             systemDropdown.dropdownHeight,
             wifiDropdown.dropdownHeight,
             bluetoothDropdown.dropdownHeight,
-            audioDropdown.dropdownHeight
+            audioDropdown.dropdownHeight,
+            launcherPopup.dropdownHeight
         )
 
         color: "transparent"
@@ -109,7 +134,9 @@ Scope {
         WlrLayershell.layer: WlrLayer.Top
         WlrLayershell.exclusiveZone: shell.barHeight
         WlrLayershell.namespace: "arch-panel"
-        WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+        WlrLayershell.keyboardFocus: shell.launcherWanted
+            ? WlrKeyboardFocus.Exclusive
+            : WlrKeyboardFocus.OnDemand
 
         exclusionMode: ExclusionMode.Normal
 
@@ -121,24 +148,37 @@ Scope {
             anchors.top: parent.top
             anchors.horizontalCenter: parent.horizontalCenter
 
-            width: shell.expanded ? shell.expandedWidth : shell.collapsedWidth
+            // полная ширина при наведении; с лаунчером - ровно под лаунчер;
+            // иначе компактная таблетка под рабочие столы
+            width: shell.expanded ? shell.expandedWidth
+                 : (shell.launcherShown ? Math.max(shell.launcherWidth, shell.collapsedWidth)
+                                        : shell.collapsedWidth)
             height: shell.barHeight + Math.max(
                 systemDropdown.animHeight,
                 wifiDropdown.animHeight,
                 bluetoothDropdown.animHeight,
                 audioDropdown.animHeight,
+                launcherPopup.animHeight,
                 0)
 
             Behavior on width { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
 
-            HoverHandler {
-                id: barHover
-                onHoveredChanged: {
-                    if (hovered) {
-                        collapseTimer.stop()
-                        shell.expanded = true
-                    } else {
-                        collapseTimer.restart()
+            // Разворачивает панель только наведение на саму верхнюю полоску,
+            // а не на лаунчер/дропдауны под ней
+            Item {
+                id: topStrip
+                width: parent.width
+                height: shell.barHeight
+
+                HoverHandler {
+                    id: barHover
+                    onHoveredChanged: {
+                        if (hovered) {
+                            collapseTimer.stop()
+                            shell.expanded = true
+                        } else {
+                            collapseTimer.restart()
+                        }
                     }
                 }
             }
@@ -154,7 +194,10 @@ Scope {
                 notchRadius: shell.notchRadius
                 dropdownRadius: shell.dropdownRadius
 
+                z: -1
+
                 dropdowns: [
+                    { x: launcherPopup.dropdownX, width: launcherPopup.dropdownWidth, height: launcherPopup.animHeight },
                     { x: systemDropdown.dropdownX, width: systemDropdown.dropdownWidth, height: systemDropdown.animHeight },
                     { x: wifiDropdown.dropdownX, width: wifiDropdown.dropdownWidth, height: wifiDropdown.animHeight },
                     { x: bluetoothDropdown.dropdownX, width: bluetoothDropdown.dropdownWidth, height: bluetoothDropdown.animHeight },
@@ -249,8 +292,40 @@ Scope {
                 Behavior on opacity { NumberAnimation { duration: 160 } }
             }
 
+            // Лаунчер: центрирован под таблеткой. Ширина бара = ширина лаунчера -
+            // боковые стороны сливаются с баром без выемок; если бар шире
+            // (панель развёрнута) - появляются обычные выемки.
+            DropDown {
+                id: launcherPopup
+                originY: shell.barHeight
+                dropdownWidth: Math.min(shell.launcherWidth, barRoot.width)
+                dropdownX: Math.round((barRoot.width - dropdownWidth) / 2)
+                dropdownHeight: 320
+                closeDelay: 0
+
+                closeOnHoverLeave: false
+                hoverOpens: false
+                raiseOnOpen: false
+
+                backgroundColor: colors.color4
+                cornerRadius: shell.dropdownRadius
+
+                onExpandedChanged: if (!expanded) shell.launcherWanted = false
+
+                AppLauncherContent {
+                    anchors.fill: parent
+                    colors: colors
+                    onAppLaunched: launcherPopup.requestClose()
+                }
+            }
+
             DropDown {
                 id: systemDropdown
+                backgroundColor: colors.color4
+                borderColor: colors.border
+                cornerRadius: shell.dropdownRadius
+                takeFocus: false
+                showBorder: launcherPopup.animHeight > 1
                 originY: shell.barHeight
                 dropdownX: 0
                 dropdownWidth: 360
@@ -264,6 +339,11 @@ Scope {
 
             DropDown {
                 id: wifiDropdown
+                backgroundColor: colors.color4
+                borderColor: colors.border
+                cornerRadius: shell.dropdownRadius
+                takeFocus: false
+                showBorder: launcherPopup.animHeight > 1
                 originY: shell.barHeight
                 dropdownX: 50
                 dropdownWidth: 340
@@ -278,6 +358,11 @@ Scope {
 
             DropDown {
                 id: bluetoothDropdown
+                backgroundColor: colors.color4
+                borderColor: colors.border
+                cornerRadius: shell.dropdownRadius
+                takeFocus: false
+                showBorder: launcherPopup.animHeight > 1
                 originY: shell.barHeight
                 dropdownX: 100
                 dropdownWidth: 340
@@ -292,6 +377,11 @@ Scope {
 
             DropDown {
                 id: audioDropdown
+                backgroundColor: colors.color4
+                borderColor: colors.border
+                cornerRadius: shell.dropdownRadius
+                takeFocus: false
+                showBorder: launcherPopup.animHeight > 1
                 originY: shell.barHeight
                 dropdownX: 150
                 dropdownWidth: 340
@@ -302,59 +392,6 @@ Scope {
                     anchors.fill: parent
                     colors: colors
                 }
-            }
-        }
-    }
-
-    PanelWindow {
-        id: launcherWindow
-
-        anchors.top: true
-        margins.top: shell.barHeight + 6
-
-        implicitWidth: launcherPopup.dropdownWidth
-        implicitHeight: launcherPopup.dropdownHeight
-
-        color: "transparent"
-        visible: launcherPopup.expanded || launcherPopup.opacity > 0
-
-        WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.exclusiveZone: 0
-        WlrLayershell.namespace: "arch-launcher"
-
-        WlrLayershell.keyboardFocus: launcherPopup.expanded
-            ? WlrKeyboardFocus.Exclusive
-            : WlrKeyboardFocus.None
-
-        exclusionMode: ExclusionMode.Ignore
-        mask: Region { item: launcherPopup }
-
-        function toggleLauncher() { launcherPopup.toggle() }
-        function openLauncher() { launcherPopup.requestOpen() }
-        function closeLauncher() { launcherPopup.requestHardClose() }
-
-        Rectangle {
-            anchors.fill: launcherPopup
-            radius: shell.dropdownRadius
-            color: colors.color4
-            border.color: colors.border
-            border.width: 1
-        }
-
-        DropDown {
-            id: launcherPopup
-            originY: 0
-            dropdownX: 0
-            dropdownWidth: 500
-            dropdownHeight: 320
-            closeDelay: 0
-
-            closeOnHoverLeave: false
-
-            AppLauncherContent {
-                anchors.fill: parent
-                colors: colors
-                onAppLaunched: launcherPopup.requestClose()
             }
         }
     }

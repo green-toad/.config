@@ -7,7 +7,7 @@ sudo pacman -S --needed --noconfirm \
     brightnessctl playerctl \
     hyprpaper fastfetch kitty xdg-desktop-portal-hyprland \
     hyprpolkitagent curl wget docker-compose ly ttf-nerd-fonts-symbols \
-    hyprshot nmap metasploit ttf-dejavu
+    hyprshot nmap metasploit ttf-dejavu rqbit
 
 sudo systemctl enable --now bluetooth
 systemctl --user enable --now pipewire pipewire-pulse wireplumber
