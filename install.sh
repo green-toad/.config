@@ -25,7 +25,7 @@ git clone https://github.com/green-toad/.config.git
 
 chmod +x ~/.config/scripts/*.sh
 
-yay -S --noconfirm hellwal mikusays elio-bin
+yay -S --noconfirm hellwal mikusays elio-bin happ-desktop-bin
 
 cat <<EOF > myAliases.txt
 alias bnr='dotnet restore && dotnet build && dotnet run'
