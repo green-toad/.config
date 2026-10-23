@@ -1,0 +1,41 @@
+[palette]
+
+bg = "%%background%%"             # Основной фон страницы
+chrome = "%%background%%"         # Верхняя/внешняя панель
+chrome_alt = "%%background%%"     # Альтернативная внешняя панель
+panel = "%%background%%"          # Панели файлов и предпросмотра
+panel_alt = "%%background%%"      # Альтернативные панели
+surface = "%%background%%"        # Карточки, поля ввода, оверлеи
+elevated = "%%background%%"       # Приподнятые оверлеи
+border = "%%border%%"             # Границы панелей и карточек
+path_bg = "%%background%%"        # Фон строки пути
+
+
+text = "%%foreground%%"           # Основной текст
+muted = "%%color8%%"              # Вторичный текст (приглушенный)
+chip_text = "%%background%%"      # Текст на ярких чипах/плашках
+
+
+accent = "%%color4%%"             # Акцентный цвет (фокус, ссылки)
+accent_soft = "%%color4%%"        # Мягкий акцентный фон
+accent_text = "%%foreground%%"    # Текст на акцентных поверхностях
+selected_bg = "%%color8%%"        # Фон выделенной строки
+selected_border = "%%color4%%"    # Граница выделенной панели
+
+
+selection_bar = "%%color3%%"      # Полоса выбранного/отмеченного элемента
+yank_bar = "%%color2%%"           # Полоса скопированного элемента
+cut_bar = "%%color1%%"            # Полоса вырезанного элемента
+progress_bar = "%%color4%%"       # Фон прогресса операций
+
+[preview.code]
+
+bg = "none"                       # Фон предпросмотра; none = прозрачный
+fg = "%%foreground%%"             # Обычный текст кода
+line_number = "%%color8%%"        # Номера строк в отступе
+line_highlight = "%%color8%%"     # Активная/текущая строка
+comment = "%%color8%%"            # Комментарии
+string = "%%color2%%"             # Строки в кавычках
+keyword = "%%color4%%"            # Ключевые слова языка
+function = "%%color6%%"           # Имена функций
+invalid = "%%color1%%"            # Недействительные/ошибочные токены

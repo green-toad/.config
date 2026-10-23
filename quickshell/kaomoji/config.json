@@ -1,0 +1,19 @@
+{
+  "title": "kaomoji",
+
+  "windowWidth": 300,
+  "windowHeight": 450,
+  "barHeight": 30,
+  "cursorOffset": 12,
+
+  "cellWidth": 136,
+  "cellHeight": 42,
+  "cellSpacing": 6,
+  "columns": 0,
+
+  "insertMode": "sendshortcut",
+  "pasteShortcut": "CTRL, code:55",
+  "terminalPasteShortcut": "CTRL SHIFT, code:55",
+  "terminalClasses": ["kitty", "alacritty", "foot", "footclient", "wezterm", "org.wezfurlong.wezterm", "com.mitchellh.ghostty", "org.kde.konsole", "konsole", "xterm", "gnome-terminal-server"],
+  "pasteDelay": 60
+}
