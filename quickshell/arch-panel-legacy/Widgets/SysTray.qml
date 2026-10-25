@@ -1,13 +1,27 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
+import "../"
+import "../Services" as Services
 
-// Renders every registered tray item; menus work natively via QsMenuAnchor.
+// Иконки трея, перекрашенные под палитру панели; меню работают нативно
+// через QsMenuAnchor.
 RowLayout {
     id: root
-    spacing: 8
+    spacing: 4
+    Colors { id: colors }
+
+    // Привести иконки приложений к одному цвету панели.
+    property bool monochrome: true
+    property color tint: colors.color7
+    // 0..1: насколько сильно закрашивать (1 = чистый силуэт одного цвета)
+    property real tintStrength: 0.85
+
+    // Пока открыто контекстное меню иконки, панель нельзя сворачивать
+    // (счётчик общий - Services.PanelState)
 
     Repeater {
         model: SystemTray.items
@@ -16,19 +30,44 @@ RowLayout {
             id: trayItem
             required property SystemTrayItem modelData
 
-            implicitWidth: 20
-            implicitHeight: 20
+            implicitWidth: 26
+            implicitHeight: 26
+
+            Rectangle {
+                anchors.fill: parent
+                radius: 7
+                color: colors.color7
+                opacity: (hover.hovered || contextMenu.visible) ? 0.16 : 0
+                Behavior on opacity { NumberAnimation { duration: 120 } }
+            }
 
             IconImage {
-                anchors.fill: parent
+                anchors.centerIn: parent
+                width: 18
+                height: 18
                 source: trayItem.modelData.icon
                 asynchronous: true
+
+                layer.enabled: root.monochrome
+                layer.effect: MultiEffect {
+                    saturation: -1.0
+                    brightness: 0.2
+                    colorization: root.tintStrength
+                    colorizationColor: root.tint
+                }
+            }
+
+            // HoverHandler вместо MouseArea{hoverEnabled}: MouseArea "съедает"
+            // hover, и полоска панели под треем считала, что курсор ушёл.
+            HoverHandler {
+                id: hover
+                cursorShape: Qt.PointingHandCursor
             }
 
             MouseArea {
+                id: mouse
                 anchors.fill: parent
                 acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-                cursorShape: Qt.PointingHandCursor
 
                 onClicked: mouse => {
                     if (mouse.button === Qt.LeftButton) {
@@ -50,6 +89,12 @@ RowLayout {
                 menu: trayItem.modelData.menu
                 anchor.item: trayItem
                 anchor.rect.y: trayItem.height
+
+                onVisibleChanged: Services.PanelState.openTrayMenus += visible ? 1 : -1
+            }
+
+            Component.onDestruction: {
+                if (contextMenu.visible) Services.PanelState.openTrayMenus -= 1
             }
         }
     }

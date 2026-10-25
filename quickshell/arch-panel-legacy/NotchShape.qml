@@ -3,7 +3,8 @@ import QtQuick.Shapes
 
 // Draws the panel's background silhouette as a single filled path:
 // a wide top bar with normal rounded corners, plus a concave "notch"
-// dip below it for every currently-open dropdown. Fully decoupled
+// dip below it for every currently-open dropdown. Overlapping dropdowns
+// are merged into one outline (see skyline()). Fully decoupled
 // from Panel/DropDown - it only needs each dropdown's x/width/height
 // (and optionally its own corner radius) via the `dropdowns` list, so
 // visually linking a second (or third...) dropdown to the bar is just
@@ -90,44 +91,84 @@ Shape {
         return out
     }
 
-    function buildPath() {
-        var BIG = 1e6 // "no constraint" sentinel for Math.min
+    // Силуэт "бар + все дропдауны" как профиль-гистограмма: на каждом
+    // участке по X берётся высота самого высокого дропдауна над ним.
+    // Благодаря этому дропдауны могут перекрываться (лаунчер + звук,
+    // закрывающийся + открывающийся) - контур всегда остаётся цельным.
+    function skyline(W) {
+        var drops = activeDrops(W)
+        var pts = [0, W]
+        for (var i = 0; i < drops.length; i++) {
+            pts.push(drops[i].x)
+            pts.push(drops[i].right)
+        }
+        pts.sort(function (a, b) { return a - b })
 
+        var segs = []
+        for (var j = 0; j < pts.length - 1; j++) {
+            var a = pts[j]
+            var b = pts[j + 1]
+            if (b - a < 0.01) continue
+            var mid = (a + b) / 2
+            var h = 0
+            for (var k = 0; k < drops.length; k++) {
+                if (drops[k].x <= mid && mid <= drops[k].right && drops[k].height > h)
+                    h = drops[k].height
+            }
+            if (h < 0.5) h = 0
+            var last = segs.length - 1
+            if (last >= 0 && Math.abs(segs[last].h - h) < 0.01)
+                segs[last].b = b
+            else
+                segs.push({ a: a, b: b, h: h })
+        }
+        return segs
+    }
+
+    function buildPath() {
+        var EPS = 0.5
         var W = Math.max(root.barWidth, 1)
         var barH = Math.max(root.barHeight, 0)
         var OR = Math.min(root.outerRadius, barH, W / 2)
+        var NR0 = root.notchRadius
+        var DR0 = root.dropdownRadius
 
-        var drops = activeDrops(W)
+        var segs = skyline(W)
+        var n = segs.length
+        var i
 
-        if (drops.length === 0) {
-            return "M " + OR + ",0 " +
-                   "L " + (W - OR) + ",0 " +
-                   "A " + OR + "," + OR + " 0 0 1 " + W + "," + OR + " " +
-                   "L " + W + "," + (barH - OR) + " " +
-                   "A " + OR + "," + OR + " 0 0 1 " + (W - OR) + "," + barH + " " +
-                   "L " + OR + "," + barH + " " +
-                   "A " + OR + "," + OR + " 0 0 1 0," + (barH - OR) + " " +
-                   "L 0," + OR + " " +
-                   "A " + OR + "," + OR + " 0 0 1 " + OR + ",0 Z"
+        // Переходы между соседними участками. c - вогнутый радиус на
+        // низком участке, v - выпуклый на высоком; up = правый участок выше.
+        var tr = []
+        for (i = 0; i < n - 1; i++) {
+            var d = Math.abs(segs[i].h - segs[i + 1].h)
+            var c = Math.min(NR0, d / 2)
+            var v = Math.min(DR0, d - c)
+            tr.push({ t: segs[i].b, up: segs[i + 1].h > segs[i].h, c: c, v: v })
         }
+        var edgeL = segs[0].h >= EPS ? Math.min(DR0, segs[0].h) : 0
+        var edgeR = segs[n - 1].h >= EPS ? Math.min(DR0, segs[n - 1].h) : 0
 
-        var leftFlush = drops[0].x <= 0.5
-        var rightFlush = drops[drops.length - 1].right >= W - 0.5
+        // Радиусы не должны в сумме превышать ширину участка
+        for (i = 0; i < n; i++) {
+            var w = segs[i].b - segs[i].a
+            var fixed = 0
+            var mov = 0
+            if (i === 0) { if (segs[0].h < EPS) fixed += OR; else mov += edgeL }
+            else mov += tr[i - 1].up ? tr[i - 1].v : tr[i - 1].c
+            if (i === n - 1) { if (segs[i].h < EPS) fixed += OR; else mov += edgeR }
+            else mov += tr[i].up ? tr[i].c : tr[i].v
 
-        // Per-drop notch/corner radii, bounded by the gap to whatever's
-        // next to them (a neighbouring drop, or the bar's own edge).
-        var geo = []
-        for (var i = 0; i < drops.length; i++) {
-            var d = drops[i]
-            var prevRight = i === 0 ? 0 : drops[i - 1].right
-            var nextX = i === drops.length - 1 ? W : drops[i + 1].x
-            var leftGap = (i === 0 && leftFlush) ? BIG : (d.x - prevRight)
-            var rightGap = (i === drops.length - 1 && rightFlush) ? BIG : (nextX - d.right)
+            var sc = mov > 0 ? Math.max(0, Math.min(1, (w - fixed) / mov)) : 1
+            if (sc < 1) {
+                if (i === 0) { if (segs[0].h >= EPS) edgeL *= sc }
+                else if (tr[i - 1].up) tr[i - 1].v *= sc
+                else tr[i - 1].c *= sc
 
-            var NR = Math.max(0, Math.min(root.notchRadius, d.height / 2, leftGap, rightGap))
-            var DR = Math.max(0, Math.min(d.radius, (d.right - d.x) / 2, Math.max(d.height - NR, 0)))
-
-            geo.push({ x: d.x, right: d.right, height: d.height, NR: NR, DR: DR, yBottom: barH + d.height })
+                if (i === n - 1) { if (segs[i].h >= EPS) edgeR *= sc }
+                else if (tr[i].up) tr[i].c *= sc
+                else tr[i].v *= sc
+            }
         }
 
         var seg = []
@@ -135,48 +176,47 @@ Shape {
         seg.push("L " + (W - OR) + ",0")
         seg.push("A " + OR + "," + OR + " 0 0 1 " + W + "," + OR)
 
-        var last = geo[geo.length - 1]
-        if (rightFlush) {
-            // last dropdown's right edge = bar's right edge: one straight line
-            seg.push("L " + W + "," + (last.yBottom - last.DR))
-        } else {
+        // правый край
+        var yLast = barH + segs[n - 1].h
+        if (segs[n - 1].h < EPS) {
             seg.push("L " + W + "," + (barH - OR))
             seg.push("A " + OR + "," + OR + " 0 0 1 " + (W - OR) + "," + barH)
+        } else {
+            seg.push("L " + W + "," + (yLast - edgeR))
+            seg.push("A " + edgeR + "," + edgeR + " 0 0 1 " + (W - edgeR) + "," + yLast)
         }
 
-        // Walk the drops right-to-left along the bar's bottom baseline,
-        // dipping into each notched drop and back up.
-        for (var k = geo.length - 1; k >= 0; k--) {
-            var g = geo[k]
-            var isRightmost = (k === geo.length - 1)
-            var isLeftmost = (k === 0)
-
-            if (!(isRightmost && rightFlush)) {
-                seg.push("L " + (g.right + g.NR) + "," + barH)
-                seg.push("A " + g.NR + "," + g.NR + " 0 0 0 " + g.right + "," + (barH + g.NR))
-            }
-
-            seg.push("L " + g.right + "," + (g.yBottom - g.DR))
-            seg.push("A " + g.DR + "," + g.DR + " 0 0 1 " + (g.right - g.DR) + "," + g.yBottom)
-            seg.push("L " + (g.x + g.DR) + "," + g.yBottom)
-            seg.push("A " + g.DR + "," + g.DR + " 0 0 1 " + g.x + "," + (g.yBottom - g.DR))
-
-            if (isLeftmost && leftFlush) {
-                seg.push("L 0," + OR)
-                seg.push("A " + OR + "," + OR + " 0 0 1 " + OR + ",0")
+        // справа налево по нижней границе профиля
+        for (i = n - 1; i >= 1; i--) {
+            var t = tr[i - 1]
+            var yR = barH + segs[i].h
+            var yL = barH + segs[i - 1].h
+            if (t.up) {
+                // текущий участок выше: выпуклый угол, стенка вверх, вогнутый угол
+                seg.push("L " + (t.t + t.v) + "," + yR)
+                seg.push("A " + t.v + "," + t.v + " 0 0 1 " + t.t + "," + (yR - t.v))
+                seg.push("L " + t.t + "," + (yL + t.c))
+                seg.push("A " + t.c + "," + t.c + " 0 0 0 " + (t.t - t.c) + "," + yL)
             } else {
-                seg.push("L " + g.x + "," + (barH + g.NR))
-                seg.push("A " + g.NR + "," + g.NR + " 0 0 0 " + (g.x - g.NR) + "," + barH)
+                // текущий участок ниже: вогнутый угол, стенка вниз, выпуклый угол
+                seg.push("L " + (t.t + t.c) + "," + yR)
+                seg.push("A " + t.c + "," + t.c + " 0 0 0 " + t.t + "," + (yR + t.c))
+                seg.push("L " + t.t + "," + (yL - t.v))
+                seg.push("A " + t.v + "," + t.v + " 0 0 1 " + (t.t - t.v) + "," + yL)
             }
         }
 
-        if (!leftFlush) {
+        // левый край
+        var y0 = barH + segs[0].h
+        if (segs[0].h < EPS) {
             seg.push("L " + OR + "," + barH)
             seg.push("A " + OR + "," + OR + " 0 0 1 0," + (barH - OR))
-            seg.push("L 0," + OR)
-            seg.push("A " + OR + "," + OR + " 0 0 1 " + OR + ",0")
+        } else {
+            seg.push("L " + edgeL + "," + y0)
+            seg.push("A " + edgeL + "," + edgeL + " 0 0 1 0," + (y0 - edgeL))
         }
-
+        seg.push("L 0," + OR)
+        seg.push("A " + OR + "," + OR + " 0 0 1 " + OR + ",0")
         seg.push("Z")
         return seg.join(" ")
     }

@@ -29,7 +29,7 @@ Rectangle {
     // depends on uiScale (that's a binding loop). implicitHeight below is
     // therefore built purely from the *base* constants.
     // ------------------------------------------------------------------
-    readonly property int baseIconSize: 64
+    readonly property int baseIconSize: 32
     readonly property int baseCoverSize: 36
     readonly property int baseSpacing: 12
     readonly property int basePadding: 12

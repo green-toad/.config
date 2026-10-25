@@ -11,6 +11,9 @@ Item {
 
     property var colors
 
+    // 320/60 минус поля дропдауна: полный список или только заголовок с тумблером
+    implicitHeight: Services.BluetoothService.enabled ? 300 : 40
+
     onVisibleChanged: {
         if (visible) Services.BluetoothService.setDiscovering(true)
         else Services.BluetoothService.setDiscovering(false)

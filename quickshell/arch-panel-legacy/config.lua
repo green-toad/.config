@@ -1,0 +1,111 @@
+-- ===========================================================================
+--  Конфиг панели. Сохрани файл - панель перечитает его сама (hot reload).
+--  Принудительно: `qs ipc call panel reload`.
+--  Ошибка в файле не ломает панель: остаётся последний рабочий конфиг,
+--  текст ошибки пишется в лог quickshell.
+--
+--  Любой пропущенный параметр берётся из значений по умолчанию, поэтому
+--  можно оставить только то, что хочешь поменять.
+--
+--  ЗАПИСЬ ВИДЖЕТА:   "wifi"   или   { "clock", format = "HH:mm" }
+--  ЗАПИСЬ БЛОКА:     "volume" или   { "row", spacing = 8, "cpu", "ram" }
+--                    (всё после имени у row/column - вложенные блоки)
+--
+--  Иконки (glyph) - hex-код символа Nerd Font ("f1eb") или сам символ.
+--  Цвета - имя из палитры ("color7") или "#rrggbb".
+-- ===========================================================================
+
+return {
+
+  -- ------------------------------------------------------------------ БАР
+  bar = {
+    height = 30,
+    expandedWidth = 800,    -- ширина развёрнутой панели
+    collapsedPadding = 18,  -- поля "таблетки" вокруг центральной зоны
+    spacing = 1,            -- расстояние между виджетами в зоне
+
+    -- Левая и правая зоны видны только когда панель развёрнута.
+    -- ЦЕНТРАЛЬНАЯ зона видна всегда: из неё состоит свёрнутая таблетка,
+    -- её ширина и задаёт размер свёрнутой панели.
+    --
+    -- Виджеты:
+    --   logo, wifi, bluetooth, audio  иконки, открывают одноимённые дропдауны
+    --   icon        { "icon", glyph = "f013", dropdown = "имя", command = { "foot" } }
+    --   workspaces  { "workspaces", count = 10 }
+    --   tray        { "tray", monochrome = true }
+    --   clock       { "clock", format = "HH:mm", size = 12 }
+    --   battery     { "battery", showPercent = true }
+    --   text        { "text", text = "привет", size = 12 }
+    --   spacer      { "spacer", width = 10 }
+    left   = { "logo", "bluetooth", "audio" },
+    center = { "workspaces" },
+    right  = { "tray" },
+  },
+
+  -- --------------------------------------------------------------- ЛАУНЧЕР
+  launcher = {
+    width = 500,
+    height = 320,
+  },
+
+  -- ------------------------------------------------------------- ДРОПДАУНЫ
+  -- Дропдаун открывается иконкой с dropdown = <имя>. Содержимое - список
+  -- блоков сверху вниз. Высота считается сама; можно задать height вручную.
+  --
+  -- Блоки:
+  --   cpu, ram         кольцевые индикаторы
+  --   battery          полоска заряда батареи
+  --   power, reboot    кнопки питания
+  --   update           кнопка обновления цветов
+  --   image            зона перетаскивания картинки
+  --   volume           громкость + mute
+  --   player           плеер: обложка, перемотка, пауза, треки
+  --   wifi, bluetooth  списки сетей / устройств
+  --   clock, text      часы / надпись
+  --   separator, spacer
+  --   row, column      контейнеры
+  --
+  -- Параметры любого блока: width, height, fill (растянуть по высоте),
+  --   fillWidth, align = "center" | "left" | "right".
+  dropdowns = {
+
+    system = {
+      width = 360,
+      height = 260,
+      closeDelay = 800,
+      spacing = 6,
+      content = {
+        { "row", fill = true, spacing = 8,
+          { "column", width = 150, fill = true, spacing = 10,
+            { "row", spacing = 14, align = "center", "cpu", "ram" },
+            "battery",
+          },
+          { "column", width = 46, fill = true, spacing = 10, "power", "reboot" },
+        },
+        { "column", spacing = 5,
+          { "update", fillWidth = false, align = "center" },
+          { "image", fill = true },
+        },
+      },
+    },
+
+    wifi = {
+      width = 340,
+      content = { { "wifi", fill = true } },
+    },
+
+    bluetooth = {
+      width = 340,
+      content = { { "bluetooth", fill = true } },
+    },
+
+    audio = {
+      width = 340,
+      content = { "volume", "separator", "player" },
+    },
+
+    -- Пример: свой дропдаун + иконка под него в баре
+    --   bar.right = { { "icon", glyph = "f017", dropdown = "time" }, "tray" }
+    -- time = { width = 220, content = { { "clock", format = "dddd, d MMMM", align = "center" }, { "clock", format = "HH:mm:ss", size = 28, align = "center" } } },
+  },
+}

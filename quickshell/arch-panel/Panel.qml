@@ -10,9 +10,13 @@ import "Services" as Services
 import "DropDownContents"
 
 // Всё живёт в ОДНОМ окне (bar) и рисуется одним силуэтом (NotchShape):
-// верхняя "таблетка" с рабочими столами, из неё разворачиваются лаунчер
-// и дропдауны бара. Дропдауны бара могут рисоваться поверх лаунчера -
-// открывающийся всегда выше закрывающегося (см. DropDown.raise()).
+// верхняя "таблетка", из неё разворачиваются лаунчер и дропдауны бара.
+// Дропдауны могут рисоваться поверх лаунчера - открывающийся всегда выше
+// закрывающегося (см. DropDown.raise()).
+//
+// config.lua (Services/Config.qml) определяет только ЧТО показывать:
+// виджеты бара (Widgets/BarWidget.qml) и части дропдаунов. Компоновка
+// дропдаунов - в DropDownContents/*.qml.
 //
 // Клавиатура: лаунчер берёт Exclusive-фокус окна, пока открыт. Раньше из-за
 // этого на Hyprland приходил синтетический hover в точку (0,0) окна и
@@ -20,31 +24,67 @@ import "DropDownContents"
 // открытия лаунчера на короткое время (hoverGuard) hover по иконкам бара
 // игнорируется.
 //  - иконки бара: только курсор (hover открывает дропдаун);
-//  - лаунчер: хоткей/IPC (super+D -> `qs ipc call launcher toggle`) или Escape.
+//  - лаунчер: хоткей/IPC (super+D -> `qs ipc call launcher toggle`) или Escape;
+//  - `qs ipc call panel reload` - перечитать config.lua.
 Scope {
     id: shell
     Colors { id: colors }
 
-    // Панель в покое - компактная "таблетка" ровно под рабочие столы.
-    // При наведении разворачивается до expandedWidth (иконки слева, трей справа).
-    property int expandedWidth: 800
-    property int collapsedPadding: 18
-    readonly property real collapsedWidth: workspaces.width + collapsedPadding * 2
-    property int barHeight: 30
+    // --- размеры и состав ------------------------------------------------
+    // config.lua задаёт только состав виджетов; размеры - здесь
+    readonly property var barCfg: Services.Config.bar
+    readonly property int barHeight: 30
+    readonly property int expandedWidth: 800
+    readonly property int collapsedPadding: 18
+    readonly property int launcherWidth: 500
+    readonly property int launcherHeight: 320
+
+    // Панель в покое - компактная "таблетка" ровно под центральную зону
+    // (по умолчанию рабочие столы). При наведении разворачивается до
+    // expandedWidth (левая и правая зоны).
+    readonly property real collapsedWidth: Math.max(centerZone.width + collapsedPadding * 2, 40)
     property bool expanded: false
 
-    // Лаунчер: ширина, на которую "растягивается" таблетка, и состояние
-    property int launcherWidth: 500
+    // Лаунчер: состояние
     property bool launcherWanted: false
     // true пока лаунчер открыт ИЛИ ещё сворачивается: ширина бара держится
     // до конца анимации высоты, потом сжимается обратно
     readonly property bool launcherShown: launcherWanted || launcherPopup.animHeight > 0.5
     property bool hoverGuard: false
 
+    property int outerRadius: 14
+    property int notchRadius: 20
+    property int dropdownRadius: 14
+
+    // --- дропдауны бара (создаются по конфигу) -----------------------------
+    property var ddItems: []
+
+    function dropdown(name) {
+        for (const d of ddItems) {
+            if (d.ddName === name) return d
+        }
+        return null
+    }
+
+    readonly property real maxDdHeight: {
+        let m = 0
+        for (const d of ddItems) m = Math.max(m, d.dropdownHeight)
+        return m
+    }
+    readonly property real maxDdAnim: {
+        let m = 0
+        for (const d of ddItems) m = Math.max(m, d.animHeight)
+        return m
+    }
+    readonly property bool anyDdExpanded: {
+        for (const d of ddItems) {
+            if (d.expanded) return true
+        }
+        return false
+    }
+
     // Нельзя сворачиваться, пока открыт любой дропдаун или меню трея
-    readonly property bool busy: systemDropdown.expanded || wifiDropdown.expanded
-                                 || bluetoothDropdown.expanded || audioDropdown.expanded
-                                 || tray.menuOpen
+    readonly property bool busy: anyDdExpanded || Services.PanelState.openTrayMenus > 0
     onBusyChanged: if (!busy) collapseTimer.restart()
 
     Timer {
@@ -53,23 +93,31 @@ Scope {
         onTriggered: if (!barHover.hovered && !shell.busy) shell.expanded = false
     }
 
-    property int outerRadius: 14
-    property int notchRadius: 20
-    property int dropdownRadius: 14
-
-    function openBarDropdown(target) {
+    function openBarDropdown(name, anchorItem, zone) {
         if (shell.hoverGuard) return
-        for (const d of [systemDropdown, wifiDropdown, bluetoothDropdown, audioDropdown]) {
+        const target = dropdown(name)
+        if (!target) return
+        for (const d of ddItems) {
             if (d !== target) d.requestHardClose()
         }
+
+        // Дропдаун выравнивается по иконке (левый край, либо правый - для
+        // иконок во второй половине панели). Считаем по итоговой ширине:
+        // правая зона прижата к правому краю, центральная - по центру.
+        const p = anchorItem.mapToItem(barRoot, 0, 0)
+        const delta = shell.expandedWidth - barRoot.width
+        const shift = zone === "right" ? delta : (zone === "center" ? delta / 2 : 0)
+        const ax = p.x + shift
+        let x = (ax + anchorItem.width / 2 < shell.expandedWidth / 2)
+                ? ax : ax + anchorItem.width - target.dropdownWidth
+        x = Math.max(0, Math.min(x, shell.expandedWidth - target.dropdownWidth))
+        target.dropdownX = Math.round(x)
+
         target.requestOpen()
     }
 
     function closeBarDropdowns() {
-        systemDropdown.requestHardClose()
-        wifiDropdown.requestHardClose()
-        bluetoothDropdown.requestHardClose()
-        audioDropdown.requestHardClose()
+        for (const d of ddItems) d.requestHardClose()
     }
 
     function openLauncher() {
@@ -110,6 +158,12 @@ Scope {
         function close(): void { shell.closeLauncher() }
     }
 
+    IpcHandler {
+        target: "panel"
+
+        function reload(): void { Services.Config.reload() }
+    }
+
     PanelWindow {
         id: bar
 
@@ -121,13 +175,7 @@ Scope {
         // Сворачивается/разворачивается только видимая часть (barRoot),
         // а mask отдаёт события лишь ей.
         implicitWidth: shell.expandedWidth
-        implicitHeight: shell.barHeight + Math.max(
-            systemDropdown.dropdownHeight,
-            wifiDropdown.dropdownHeight,
-            bluetoothDropdown.dropdownHeight,
-            audioDropdown.dropdownHeight,
-            launcherPopup.dropdownHeight
-        )
+        implicitHeight: shell.barHeight + Math.max(shell.maxDdHeight, shell.launcherHeight)
 
         color: "transparent"
 
@@ -149,17 +197,11 @@ Scope {
             anchors.horizontalCenter: parent.horizontalCenter
 
             // полная ширина при наведении; с лаунчером - ровно под лаунчер;
-            // иначе компактная таблетка под рабочие столы
+            // иначе компактная таблетка под центральную зону
             width: shell.expanded ? shell.expandedWidth
                  : (shell.launcherShown ? Math.max(shell.launcherWidth, shell.collapsedWidth)
                                         : shell.collapsedWidth)
-            height: shell.barHeight + Math.max(
-                systemDropdown.animHeight,
-                wifiDropdown.animHeight,
-                bluetoothDropdown.animHeight,
-                audioDropdown.animHeight,
-                launcherPopup.animHeight,
-                0)
+            height: shell.barHeight + Math.max(shell.maxDdAnim, launcherPopup.animHeight, 0)
 
             Behavior on width { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
 
@@ -196,100 +238,69 @@ Scope {
 
                 z: -1
 
-                dropdowns: [
-                    { x: launcherPopup.dropdownX, width: launcherPopup.dropdownWidth, height: launcherPopup.animHeight },
-                    { x: systemDropdown.dropdownX, width: systemDropdown.dropdownWidth, height: systemDropdown.animHeight },
-                    { x: wifiDropdown.dropdownX, width: wifiDropdown.dropdownWidth, height: wifiDropdown.animHeight },
-                    { x: bluetoothDropdown.dropdownX, width: bluetoothDropdown.dropdownWidth, height: bluetoothDropdown.animHeight },
-                    { x: audioDropdown.dropdownX, width: audioDropdown.dropdownWidth, height: audioDropdown.animHeight }
-                ]
+                dropdowns: {
+                    const list = [{
+                        x: launcherPopup.dropdownX,
+                        width: launcherPopup.dropdownWidth,
+                        height: launcherPopup.animHeight
+                    }]
+                    for (const d of shell.ddItems)
+                        list.push({ x: d.dropdownX, width: d.dropdownWidth, height: d.animHeight })
+                    return list
+                }
 
                 fillColor: colors.color4
                 strokeColor: colors.border
                 strokeWidth: 1
             }
 
-            // Иконка слева. Видна только в развёрнутой панели.
-            component BarIcon: Item {
-                id: icon
-                property string glyph
-                property int glyphSize: 14
-                property color glyphColor: "white"
-                signal entered()
-
-                width: 46
-                height: parent ? parent.height : 30
-
-                Text {
-                    anchors.centerIn: parent
-                    text: icon.glyph
-                    font.family: "Symbols Nerd Font"
-                    font.pixelSize: icon.glyphSize
-                    color: icon.glyphColor
-                }
-
-                HoverHandler {
-                    onHoveredChanged: if (hovered) icon.entered()
-                }
-            }
-
-            Row {
-                id: leftIcons
+            // ---------------------------------------------------- зоны бара
+            // Левая и правая зоны видны только в развёрнутой панели.
+            BarZone {
+                id: leftZone
+                zone: "left"
+                model: shell.barCfg.left ?? []
+                barHeight: shell.barHeight
+                spacing: 1
                 anchors.top: parent.top
                 anchors.left: parent.left
-                height: shell.barHeight
-                spacing: 1
 
                 opacity: shell.expanded ? 1 : 0
                 visible: opacity > 0
                 Behavior on opacity { NumberAnimation { duration: 160 } }
 
-                // logo
-                // (systemDropdown.requestClose() при уходе курсора - зло во плоти, не возвращать)
-                BarIcon {
-                    glyph: "\uF303"
-                    glyphSize: 16
-                    glyphColor: colors.color7
-                    onEntered: shell.openBarDropdown(systemDropdown)
-                }
-                // wifi
-                BarIcon {
-                    glyph: "\uF1EB"
-                    glyphColor: Services.WifiService.wifiEnabled ? colors.color7 : colors.color5
-                    onEntered: shell.openBarDropdown(wifiDropdown)
-                }
-                // bluetooth
-                BarIcon {
-                    glyph: "\uF294"
-                    glyphColor: Services.BluetoothService.enabled ? colors.color7 : colors.color5
-                    onEntered: shell.openBarDropdown(bluetoothDropdown)
-                }
-                // звук
-                BarIcon {
-                    glyph: Services.AudioService.muted ? "\uF026" : "\uF028"
-                    glyphColor: Services.AudioService.muted ? colors.color5 : colors.color7
-                    onEntered: shell.openBarDropdown(audioDropdown)
-                }
+                onOpenDropdown: (name, item, z) => shell.openBarDropdown(name, item, z)
             }
 
-            // workspaces - всегда видны, по центру; от их ширины считается
-            // размер свёрнутой панели
-            Workspaces {
-                id: workspaces
+            // Центральная зона видна всегда - от её ширины считается
+            // размер свёрнутой таблетки.
+            BarZone {
+                id: centerZone
+                zone: "center"
+                model: shell.barCfg.center ?? []
+                barHeight: shell.barHeight
+                spacing: 1
+                anchors.top: parent.top
                 anchors.horizontalCenter: parent.horizontalCenter
-                y: (shell.barHeight - height) / 2
+
+                onOpenDropdown: (name, item, z) => shell.openBarDropdown(name, item, z)
             }
 
-            // tray - только в развёрнутой панели
-            SysTray {
-                id: tray
+            BarZone {
+                id: rightZone
+                zone: "right"
+                model: shell.barCfg.right ?? []
+                barHeight: shell.barHeight
+                spacing: 1
+                anchors.top: parent.top
                 anchors.right: parent.right
                 anchors.rightMargin: 12
-                y: (shell.barHeight - height) / 2
 
                 opacity: shell.expanded ? 1 : 0
                 visible: opacity > 0
                 Behavior on opacity { NumberAnimation { duration: 160 } }
+
+                onOpenDropdown: (name, item, z) => shell.openBarDropdown(name, item, z)
             }
 
             // Лаунчер: центрирован под таблеткой. Ширина бара = ширина лаунчера -
@@ -300,7 +311,7 @@ Scope {
                 originY: shell.barHeight
                 dropdownWidth: Math.min(shell.launcherWidth, barRoot.width)
                 dropdownX: Math.round((barRoot.width - dropdownWidth) / 2)
-                dropdownHeight: 320
+                dropdownHeight: shell.launcherHeight
                 closeDelay: 0
 
                 closeOnHoverLeave: false
@@ -319,78 +330,50 @@ Scope {
                 }
             }
 
-            DropDown {
-                id: systemDropdown
-                backgroundColor: colors.color4
-                borderColor: colors.border
-                cornerRadius: shell.dropdownRadius
-                takeFocus: false
-                showBorder: launcherPopup.animHeight > 1
-                originY: shell.barHeight
-                dropdownX: 0
-                dropdownWidth: 360
-                dropdownHeight: 260
+            // Дропдауны: какие из известных включены - решает config.lua
+            Repeater {
+                id: ddRepeater
+                model: Services.Config.dropdownNames
 
-                SystemDropdownContent {
-                    anchors.fill: parent
-                    colors: colors
-                }
-            }
+                onItemAdded: (index, item) => shell.ddItems = shell.ddItems.concat([item])
+                onItemRemoved: (index, item) => shell.ddItems = shell.ddItems.filter(d => d !== item)
 
-            DropDown {
-                id: wifiDropdown
-                backgroundColor: colors.color4
-                borderColor: colors.border
-                cornerRadius: shell.dropdownRadius
-                takeFocus: false
-                showBorder: launcherPopup.animHeight > 1
-                originY: shell.barHeight
-                dropdownX: 50
-                dropdownWidth: 340
-                dropdownHeight: Services.WifiService.wifiEnabled ? 320 : 60
-                closeDelay: 10
+                delegate: DropDown {
+                    id: dd
+                    required property string modelData
 
-                WifiDropdownContent {
-                    anchors.fill: parent
-                    colors: colors
-                }
-            }
+                    readonly property string ddName: modelData
+                    readonly property var parts: Services.Config.dropdowns[modelData] ?? []
 
-            DropDown {
-                id: bluetoothDropdown
-                backgroundColor: colors.color4
-                borderColor: colors.border
-                cornerRadius: shell.dropdownRadius
-                takeFocus: false
-                showBorder: launcherPopup.animHeight > 1
-                originY: shell.barHeight
-                dropdownX: 100
-                dropdownWidth: 340
-                dropdownHeight: Services.BluetoothService.enabled ? 320 : 60
-                closeDelay: 10
+                    backgroundColor: colors.color4
+                    borderColor: colors.border
+                    cornerRadius: shell.dropdownRadius
+                    takeFocus: false
+                    showBorder: launcherPopup.animHeight > 1
 
-                BluetoothDropdownContent {
-                    anchors.fill: parent
-                    colors: colors
-                }
-            }
+                    originY: shell.barHeight
+                    dropdownWidth: ddName === "system" ? 360 : 340
+                    // высота - по содержимому (у каждого content задан implicitHeight)
+                    dropdownHeight: (view.item ? view.item.implicitHeight : 0) + contentMargins * 2
+                    closeDelay: ddName === "system" ? 800 : 10
 
-            DropDown {
-                id: audioDropdown
-                backgroundColor: colors.color4
-                borderColor: colors.border
-                cornerRadius: shell.dropdownRadius
-                takeFocus: false
-                showBorder: launcherPopup.animHeight > 1
-                originY: shell.barHeight
-                dropdownX: 150
-                dropdownWidth: 340
-                dropdownHeight: 200
-                closeDelay: 10
+                    Loader {
+                        id: view
+                        anchors.fill: parent
+                        sourceComponent: {
+                            switch (dd.ddName) {
+                                case "system": return systemComp
+                                case "wifi": return wifiComp
+                                case "bluetooth": return bluetoothComp
+                                default: return audioComp
+                            }
+                        }
+                    }
 
-                AudioDropdownContent {
-                    anchors.fill: parent
-                    colors: colors
+                    Component { id: systemComp; SystemDropdownContent { colors: colors; parts: dd.parts } }
+                    Component { id: wifiComp; WifiDropdownContent { colors: colors } }
+                    Component { id: bluetoothComp; BluetoothDropdownContent { colors: colors } }
+                    Component { id: audioComp; AudioDropdownContent { colors: colors; parts: dd.parts } }
                 }
             }
         }

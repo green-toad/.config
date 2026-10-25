@@ -9,6 +9,9 @@ Item {
 
     property var colors
 
+    // 320/60 минус поля дропдауна: полный список или только заголовок с тумблером
+    implicitHeight: Services.WifiService.wifiEnabled ? 300 : 40
+
     property var expandedNetwork: null
     property string authError: ""
 

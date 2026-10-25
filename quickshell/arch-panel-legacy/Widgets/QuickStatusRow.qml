@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls
 import "../Services" as Services
 import "../"
 
@@ -9,59 +8,7 @@ ColumnLayout {
     spacing: 8
     Colors { id: colors }
 
-    // ---- Volume
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: 8
-
-        Text {
-            text: Services.AudioService.muted ? "\uF026" : "\uF028"
-            font.family: "Symbols Nerd Font"
-            font.pixelSize: 14
-            color: colors.color6
-            Layout.preferredWidth: 18
-        }
-
-        Slider {
-            id: volSlider
-            Layout.fillWidth: true
-            from: 0
-            to: 1.5
-            value: Services.AudioService.volume
-            onMoved: Services.AudioService.setVolume(value)
-
-            background: Rectangle {
-                implicitHeight: 6
-                radius: 3
-                color: colors.color8
-                Rectangle {
-                    width: volSlider.visualPosition * parent.width
-                    height: parent.height
-                    radius: 3
-                    color: colors.color6
-                }
-            }
-
-            handle: Rectangle {
-                color: colors.color15
-                border.color: colors.color6
-                border.width: 1
-
-                layer.enabled: true
-                layer.effect: null
-            }
-        }
-
-        Text {
-            text: Math.round(Services.AudioService.volume * 100) + "%"
-            color: colors.color15
-            font.pixelSize: 11
-            Layout.preferredWidth: 32
-            horizontalAlignment: Text.AlignRight
-        }
-    }
-
-    // ---- Battery
+    // ---- Battery (на месте бывшего слайдера звука)
     RowLayout {
         Layout.fillWidth: true
         spacing: 8
@@ -85,7 +32,7 @@ ColumnLayout {
             clip: true
 
             Rectangle {
-                width: parent.width * Services.BatteryService.percent - 4
+                width: Math.max(0, parent.width * Services.BatteryService.percent - 4)
                 height: parent.height - 4
                 x: 2
                 y: 2
@@ -106,6 +53,26 @@ ColumnLayout {
             font.pixelSize: 11
             Layout.preferredWidth: 48
             horizontalAlignment: Text.AlignRight
+        }
+    }
+
+    // Нет батареи (ПК) - просто пометка, чтобы слот не был пустым
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: 8
+        visible: !Services.BatteryService.available
+
+        Text {
+            text: "\uF1E6"
+            font.family: "Symbols Nerd Font"
+            font.pixelSize: 14
+            color: colors.color10
+            Layout.preferredWidth: 18
+        }
+        Text {
+            text: "От сети"
+            color: colors.color15
+            font.pixelSize: 11
         }
     }
 }

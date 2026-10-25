@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
 import "../"
+import "../Services" as Services
 
 // Иконки трея, перекрашенные под палитру панели; меню работают нативно
 // через QsMenuAnchor.
@@ -20,8 +21,7 @@ RowLayout {
     property real tintStrength: 0.85
 
     // Пока открыто контекстное меню иконки, панель нельзя сворачивать
-    property int openMenus: 0
-    readonly property bool menuOpen: openMenus > 0
+    // (счётчик общий - Services.PanelState)
 
     Repeater {
         model: SystemTray.items
@@ -37,7 +37,7 @@ RowLayout {
                 anchors.fill: parent
                 radius: 7
                 color: colors.color7
-                opacity: (mouse.containsMouse || contextMenu.visible) ? 0.16 : 0
+                opacity: (hover.hovered || contextMenu.visible) ? 0.16 : 0
                 Behavior on opacity { NumberAnimation { duration: 120 } }
             }
 
@@ -57,12 +57,17 @@ RowLayout {
                 }
             }
 
+            // HoverHandler вместо MouseArea{hoverEnabled}: MouseArea "съедает"
+            // hover, и полоска панели под треем считала, что курсор ушёл.
+            HoverHandler {
+                id: hover
+                cursorShape: Qt.PointingHandCursor
+            }
+
             MouseArea {
                 id: mouse
                 anchors.fill: parent
-                hoverEnabled: true
                 acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-                cursorShape: Qt.PointingHandCursor
 
                 onClicked: mouse => {
                     if (mouse.button === Qt.LeftButton) {
@@ -85,11 +90,11 @@ RowLayout {
                 anchor.item: trayItem
                 anchor.rect.y: trayItem.height
 
-                onVisibleChanged: root.openMenus += visible ? 1 : -1
+                onVisibleChanged: Services.PanelState.openTrayMenus += visible ? 1 : -1
             }
 
             Component.onDestruction: {
-                if (contextMenu.visible) root.openMenus -= 1
+                if (contextMenu.visible) Services.PanelState.openTrayMenus -= 1
             }
         }
     }
