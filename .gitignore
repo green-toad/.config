@@ -20,6 +20,7 @@
 !wofi/**
 !quickshell/
 !quickshell/**
+quickshell/arch-panel/config.lua
 !ly/
 !ly/**
 !install.sh
